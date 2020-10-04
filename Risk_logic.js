@@ -4,7 +4,6 @@ The logic for my Risk emulator
 
 /// Globals ///
 var boardDim = 100 + 10; // leave a padding of 5 on each side of the visible board
-var countries = []; // During setup, we fill this array with Country objects
 var countryMap = {}; // Only used when in country location capture mode
 var drawSpace = null; // Holds the HTML canvas context
 var htmlCanvasElement = null; // Holds the HTML canvas element (useful for sizing)
@@ -46,8 +45,8 @@ function setUpGameBoard(onLoad=false) {
 		mapImage.onload = drawMap;
 		mapImage.src = "map_small.png";
 		
-		// Draw the image
-		updateBoard();
+		// Draw the map
+		drawMap();
 		
 		// Parse URL params
 		parseUrlParams();
@@ -76,6 +75,7 @@ function startGame() {
 	// Decide who goes first
 	// Place armies
 	// Prepare for the first turn
+	// Launch first turn
 }
 
 /**
@@ -114,7 +114,10 @@ function handleScreenClick(event) {
 	let pointerPos = getPointerPositionOnCanvas(htmlCanvasElement, event);
 	// Call a function based on game state, and pass the click location
 	if(mode == "countryCapture") {
-		captureCountryLocations(pointerPos)
+		captureCountryLocations(pointerPos);
+	}
+	else if(mode == "play") {
+		countryClick(pointerPos);
 	}
 	// TODO: Add more states and function calls to handle those states
 }
@@ -134,7 +137,7 @@ function getPointerPositionOnCanvas(canvas, event) {
 /**
  * A prompt asks for country name. When the name is given, enter that name, with the captured
  * location on the canvas into a object. When the special value "done" is entered, dump the
- * country locations into a json file.
+ * country locations into a json file, then stop capture mode.
  */
 function captureCountryLocations(pointerPos) {
 	country = prompt("Enter country to assign this click location: ");
@@ -153,6 +156,27 @@ function captureCountryLocations(pointerPos) {
 	else {
 		countryMap[country] = pointerPos;
 	}
+}
+
+/**
+ * Adapt functionality based on game state (we mostly care about the mode).
+ */
+function countryClick(pointerPos) {
+	let closestCountry = null;
+	let closestDistance = 999999;
+	// countries is loaded in country_locations.js
+	for(let country in countries) {
+		// Simple distance formula; it's not too expensive, because there are less than 50 countries
+		let howClose = Math.sqrt(
+			Math.abs(countries[country].x - pointerPos.x)
+			+ Math.abs(countries[country].y - pointerPos.y)
+		);
+		if(howClose < closestDistance) {
+			closestDistance = howClose;
+			closestCountry = country;
+		}
+	}
+	alert(closestCountry);  // For now, just show the country; we'll do more later of course
 }
 
 /**
