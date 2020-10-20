@@ -10,7 +10,7 @@ var diceRoller = {}; // Object with data and UI elements for the dice roller mod
 var htmlCanvasElement = null; // Holds the HTML canvas element (useful for sizing)
 var isMuted = false; // Is the background music muted?
 var mapImage = null; // The map image that we draw on
-var mode = "play"; // Gamestate mode: play means let's play the game
+var mode = "startup"; // Gamestate mode: play means let's play the game
 var musicList = {}; // Holds Audio objects to load and play music
 var numPlayers = 2; // The number of players in the game
 var song = null; // Holds the current music track
@@ -34,7 +34,9 @@ function setUpGameBoard(onLoad=false) {
 		}
 		
 		// Set up the dice roller
+		diceRoller["parent"] = $("#diceRoller");
 		diceRoller["title"] = document.getElementById("dice-roller-title");
+		diceRoller["body"] = document.getElementById("dice-roller-body");
 		diceRoller["results"] = document.getElementById("dice-roller-results");
 		diceRoller["die-1"] = document.getElementById("dice-roller-die-1");
 		diceRoller["die-2"] = document.getElementById("dice-roller-die-2");
@@ -206,15 +208,18 @@ function rollDice(modalTitle, resultsSuffix) {
 	loadSong("battleMusic1");
 	diceRoller.title.innerText = modalTitle;
 	diceRoller.results.innerText = "";
-	$("#diceRoller").modal("show");
+	diceRoller["parent"].modal("show");
 	let die1 = die2 = 0;
 	// Break ties
 	while(die1 == die2) {
 		die1 = getDieRoll();
 		die2 = getDieRoll();
 	}
-	diceRoller["die-1"].innerText = die1;
-	diceRoller["die-2"].innerText = die2;
+	//diceRoller["die-1"].innerText = die1;
+	//diceRoller["die-2"].innerText = die2;
+	paintDieRoll("die-1", die1);
+	paintDieRoll("die-2", die2);
+	
 	if(die1 > die2)
 		winner = "Player 1";
 	else winner = "Player 2";
@@ -228,6 +233,18 @@ function getDieRoll() {
     let min = Math.ceil(1);
     let max = Math.floor(6);
     return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+/**
+ * Display a singe die roll.
+ */
+function paintDieRoll(dieElement, number) {
+	//dieImage = new Image();
+	dieImage = document.createElement("img");
+	dieImage.src = "images/die-white-" + number + ".png";
+	dieImage.width = dieImage.height = 50;
+	dieImage.alt = number;
+	diceRoller["body"].replaceChild(dieImage, diceRoller[dieElement]);
 }
 
 /**
