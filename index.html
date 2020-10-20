@@ -1,19 +1,76 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
+  <!-- Boilerplate -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+  <!-- My stuff -->
   <script src="Risk_logic.js"></script>
   <script src="country_locations.js"></script>
+  <style>
+    [hidden] { display: none !important; }
+  </style>
 </head>
+
 <body onload="setUpGameBoard(onLoad=true)">
+  
+  <!-- Main screen -->
   <h1>Risk Emulator</h1>
   <canvas id="board" width="756" height="554" style="border:3px solid #000000;">
-	Oh no! Your browser does not support the HTML5 canvas protocol. You can't play this game on this device.
+    Oh no! Your browser does not support the HTML5 canvas protocol. You can't play this game on this device.
   </canvas>
   <br/>
   <p id="textDisplayArea">Click a button below, or click the screen to start</p>
   <button onclick="startGame()">Start Game</button>
   <button onclick="muteButton()">Mute/Unmute</button>
-  <button onclick="updateSettings()">Settings</button>
+  <button type="button" onclick="loadSong();" data-toggle="modal" data-target="#settingsMenu">Settings</button>
+  
+  <!-- Settings Menu -->
+  <div id="settingsMenu" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" onclick="saveSettings();" class="close" data-dismiss="modal">&times;</button>
+          <h4 class="modal-title">Settings</h4>
+        </div>
+        <div class="modal-body">
+          <form>
+			<label for="numPlayers">Number of Players: </label>
+			<input type="number" id="numPlayers" name="numPlayers" min=2 max=6 value=2>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" onclick="saveSettings();" class="btn btn-default" data-dismiss="modal">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Dice roller -->
+  <div id="diceRoller" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" onclick="closeModal();" class="close" data-dismiss="modal">&times;</button>
+          <h4 id="dice-roller-title" class="modal-title"></h4>
+        </div>
+        <div class="modal-body">
+		  <!-- <img id="dice-roller-die-1"></img>
+		  <img id="dice-roller-die-2"></img> -->
+		  <span id="dice-roller-die-1"></span>
+		  <span id="dice-roller-die-2"></span>
+		  <br/>
+		  <span id="dice-roller-results"></span>
+        </div>
+        <div class="modal-footer">
+          <button id="dice-roller-roll-again" type="button" onclick="rollAgain();" class="btn btn-default" hidden="true">Roll again</button>
+          <button type="button" onclick="closeModal();" class="btn btn-default" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
 </body>
 </html>

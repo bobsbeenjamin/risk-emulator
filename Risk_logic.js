@@ -6,33 +6,39 @@ The logic for my Risk emulator
 var boardDim = 100 + 10; // leave a padding of 5 on each side of the visible board
 var countryMap = {}; // Only used when in country location capture mode
 var drawSpace = null; // Holds the HTML canvas context
+var diceRoller = {}; // Object with data and UI elements for the dice roller modal
 var htmlCanvasElement = null; // Holds the HTML canvas element (useful for sizing)
 var isMuted = false; // Is the background music muted?
 var mapImage = null; // The map image that we draw on
-var mode = "play";
-var musicList = {}; // Will hold Audio objects to load and play music
+var mode = "play"; // Gamestate mode: play means let's play the game
+var musicList = {}; // Holds Audio objects to load and play music
+var numPlayers = 2; // The number of players in the game
 var song = null; // Holds the current music track
-var pixelsPerSide = 5; // Number of pixels "tall" and "wide" each cell is
 
 /**
- * Sets up some key variables that will be used later:
- *     drawSpace: DOM handle for the actual html drawing area
- *     mapImage:  
+ * Initializes the global vars. Run this only once per game.
  */
 function setUpGameBoard(onLoad=false) {
 	if(onLoad) {
 		// Get audio ready
 		try {
-			audio = new Audio("SecretofMana_IntoTheThickOfItAcapella_SmoothMcGroove.mp3");
+			audio = new Audio("music/SecretofMana_IntoTheThickOfItAcapella_SmoothMcGroove.mp3");
 			musicList.backgroundMusic1 = audio;
-			audio = new Audio("AvengersSuite_Theme.mp3");
+			audio = new Audio("music/AvengersSuite_Theme.mp3");
 			musicList.battleMusic1 = audio;
-			audio = new Audio("SuperSmashBrosBrawlOpeningTheme.mp3");
+			audio = new Audio("music/SuperSmashBrosBrawlOpeningTheme.mp3");
 			musicList.mainMenu1 = audio;
 		}
 		catch (e) {
 			// Do nothing
 		}
+		
+		// Set up the dice roller
+		diceRoller["title"] = document.getElementById("dice-roller-title");
+		diceRoller["results"] = document.getElementById("dice-roller-results");
+		diceRoller["die-1"] = document.getElementById("dice-roller-die-1");
+		diceRoller["die-2"] = document.getElementById("dice-roller-die-2");
+		diceRoller["roll-again"] = document.getElementById("dice-roller-roll-again");
 		
 		// Set up the canvas
 		htmlCanvasElement = document.getElementById("board");
@@ -43,7 +49,7 @@ function setUpGameBoard(onLoad=false) {
 		// Prep the map image
 		mapImage = new Image();
 		mapImage.onload = drawMap;
-		mapImage.src = "map_small.png";
+		mapImage.src = "images/map_small.png";
 		
 		// Draw the map
 		drawMap();
@@ -71,19 +77,33 @@ function parseUrlParams() {
  * Decide who goes first, place armies, and prepare for the first turn.
  */
 function startGame() {
-	changeSettings();
 	// Decide who goes first
+	rollDice("Decide who goes first", "goes first");
 	// Place armies
 	// Prepare for the first turn
 	// Launch first turn
 }
 
 /**
- * Decide who goes first, place armies, and prepare for the first turn.
+ * Load a song.
  */
-function changeSettings() {
-	song = musicList.mainMenu1;
+function loadSong(songStr="mainMenu1") {
+	song = musicList[songStr];
 	song.play();
+}
+
+/**
+ * Commit the settings. Warn user of a reload.
+ */
+function saveSettings() {
+	closeModal();
+}
+
+/**
+ * Pause the music.
+ */
+function closeModal() {
+	song.pause();
 }
 
 /**
@@ -177,6 +197,37 @@ function countryClick(pointerPos) {
 		}
 	}
 	alert(closestCountry);  // For now, just show the country; we'll do more later of course
+}
+
+/**
+ * Roll the dice. This updates the UI.
+ */
+function rollDice(modalTitle, resultsSuffix) {
+	loadSong("battleMusic1");
+	diceRoller.title.innerText = modalTitle;
+	diceRoller.results.innerText = "";
+	$("#diceRoller").modal("show");
+	let die1 = die2 = 0;
+	// Break ties
+	while(die1 == die2) {
+		die1 = getDieRoll();
+		die2 = getDieRoll();
+	}
+	diceRoller["die-1"].innerText = die1;
+	diceRoller["die-2"].innerText = die2;
+	if(die1 > die2)
+		winner = "Player 1";
+	else winner = "Player 2";
+	diceRoller.results.innerText = winner + " " + resultsSuffix;
+}
+
+/**
+ * Roll a single die. This just returns a number.
+ */
+function getDieRoll() {
+    let min = Math.ceil(1);
+    let max = Math.floor(6);
+    return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
 /**
