@@ -215,8 +215,6 @@ function rollDice(modalTitle, resultsSuffix) {
 		die1 = getDieRoll();
 		die2 = getDieRoll();
 	}
-	//diceRoller["die-1"].innerText = die1;
-	//diceRoller["die-2"].innerText = die2;
 	paintDieRoll("die-1", die1);
 	paintDieRoll("die-2", die2);
 	
@@ -245,6 +243,7 @@ function paintDieRoll(dieElement, number) {
 	dieImage.width = dieImage.height = 50;
 	dieImage.alt = number;
 	diceRoller["body"].replaceChild(dieImage, diceRoller[dieElement]);
+	diceRoller[dieElement] = dieImage;
 }
 
 /**
