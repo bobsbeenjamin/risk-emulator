@@ -3,17 +3,24 @@ The logic for my Risk emulator
 */
 
 /// Globals ///
+const ACTIVE_PLAYER_NUM = 1; // Indicates which player is the person playing the game
 var boardDim = 100 + 10; // leave a padding of 5 on each side of the visible board
+var currentPlayer = 0; // The player whose turn it is
 var countryMap = {}; // Only used when in country location capture mode
 var drawSpace = null; // Holds the HTML canvas context
 var diceRoller = {}; // Object with data and UI elements for the dice roller modal
 var htmlCanvasElement = null; // Holds the HTML canvas element (useful for sizing)
 var isMuted = false; // Is the background music muted?
 var mapImage = null; // The map image that we draw on
-var mode = "startup"; // Gamestate mode: play means let's play the game
+var mode = "startup"; // Gamestate mode: "playing" means a game is in progress
 var musicList = {}; // Holds Audio objects to load and play music
+var numCountriesWithArmies = 0; // How many countries have armies on them; only used during startup
 var numPlayers = 2; // The number of players in the game
+var playerColors = []; // The colors for each player
+var playerOrder = []; // Determined at game start; the order of play
+var roundCounter = 0; // Which round we're on; a round is complete once each player takes a turn
 var song = null; // Holds the current music track
+var turnCounter = 0; // Which turn we're on; each player gets one turn per round
 
 /**
  * Initializes the global vars. Run this only once per game.
@@ -79,11 +86,137 @@ function parseUrlParams() {
  * Decide who goes first, place armies, and prepare for the first turn.
  */
 function startGame() {
+	// Give the player an option to abort while a game is going
+	if(mode == "playing") {
+		startNewGame = confirm("Do you want to abandon this game and start a new game?");
+		if(!startNewGame)
+			return;
+	}
 	// Decide who goes first
-	rollDice("Decide who goes first", "goes first");
+	firstPlayer = rollDice("Decide who goes first", "goes first");
+	if(firstPlayer == 1)  // TODO: Make this more dynamic for more than 2 players
+		playerOrder = [1, 2];
+	else
+		playerOrder = [2, 1];
+	// Initial countries and player colors
+	initializeCountries();
+	initializePlayerColors();
 	// Place armies
+	mode = "placingArmies";
+	var initialPlacement = true;
+	let startingNumberOfArmies = 50 - (5 * numPlayers);
+	for(let i = 0; i < startingNumberOfArmies; i++) {
+		for(player in playerOrder) {
+			currentPlayer = player;
+			if(isPlayerNPC(player))
+				placeArmy(player);
+		}
+	}
 	// Prepare for the first turn
 	// Launch first turn
+	mode = "playing";
+	mainGameLoop();
+}
+
+/**
+ * Set all countries to 0 armies and no controller.
+ */
+function initializeCountries() {
+	for(country in countries) {
+		country.numArmies = 0;
+		country.controller = 0;
+	}
+}
+
+/**
+ * Give each player a color. // TODO: Let the player choose colors
+ */
+function initializePlayerColors() {
+	playerColors = [];
+	let colorPalette = ["blue", "red", "yellow", "brown", "pink", "orange"];
+	for(let i = 0; i < numPlayers; i++) {
+		playerColors[i] = colorPalette[i];
+	}
+}
+
+/**
+ * Keep playing the game until there is a winner. (this is recursive)
+ */
+function mainGameLoop(round=1) {
+	roundCounter = round;
+	for(player in playerOrder) {
+		currentPlayer = player;
+		turnCounter += 1;
+		takeTurn(player);
+	}
+	mainGameLoop(round + 1);
+}
+
+/**
+ * Place an army on the game board. If the player is an NPC, then choose a country at random.
+ * If initialPlacement is true, then force placement on a country with no armies.
+ */
+function placeArmy(player, country=null) {
+	// For NPC, place an army. For the active player, this function is called from handleScreenClick.
+	if(isPlayerNPC()) {
+		country = getRandomCountry();
+		while(initialPlacement && country.numArmies == 0) {
+			country = getRandomCountry();
+		}
+	}
+	else if(initialPlacement && country.numArmies == 0) {
+		alert("Choose a country with no armies until the world is full.");
+		return;
+	}
+	
+	// Place the army
+	country.controller = player;
+	country.numArmies += 1;
+	drawArmiesForCountry(country);
+	
+	// Handle initialPlacement logic. We count up numCountriesWithArmies until the world is full.
+	if(initialPlacement) {
+		numCountriesWithArmies += 1;
+		if(numCountriesWithArmies >= 50)
+			initialPlacement = false;
+	}
+}
+
+/**
+ * @returns A random country.
+ */
+function getRandomCountry() {
+	let countryIdx = getRandomInt(0, 49); // Get a random country index
+	let keys = Object.keys(countries); // Get the country names
+	let country = countries[keys[countryIdx]]; // Get a random country
+	if(!country.hasOwnProperty("numArmies"))
+		country.numArmies = 0;
+	return country;
+}
+
+/**
+ * Draw an overlay on the country with the number of armies, colored with the controller's color.
+ */
+function drawArmiesForCountry(country) {
+	let x = country.x - 15; // Make the country's x the center of the rectangle
+	let y = country.y + 5; // Draw the armies a little below the country name
+	let color = playerColors[country.controller];
+	// Draw a rectangle the color of the player, with the number of armies in white
+	drawSpace.fillStyle = color;
+	drawSpace.fillRect(x, y, 30, 20);
+	drawSpace.fillStyle = "white";
+	drawSpace.fillText(country.numArmies, 10, 50);
+}
+
+/**
+ * @returns a random integer between min (inclusive) and max (inclusive).
+ * Using Math.round() will give you a non-uniform distribution.
+ * Credit: https://stackoverflow.com/a/1527820/2221645
+ */
+function getRandomInt(min, max) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
 /**
@@ -138,8 +271,9 @@ function handleScreenClick(event) {
 	if(mode == "countryCapture") {
 		captureCountryLocations(pointerPos);
 	}
-	else if(mode == "play") {
-		countryClick(pointerPos);
+	else if(mode == "placingArmies" && !isPlayerNPC()) {
+		country = countryClick(pointerPos);
+		placeArmy(currentPlayer, country);
 	}
 	// TODO: Add more states and function calls to handle those states
 }
@@ -162,20 +296,22 @@ function getPointerPositionOnCanvas(canvas, event) {
  * country locations into a json file, then stop capture mode.
  */
 function captureCountryLocations(pointerPos) {
-	country = prompt("Enter country to assign this click location: ");
+	let country = prompt("Enter country to assign this click location: ");
 	if(country == "done") {
 		// Make a "pretty" json string
 		let jsonData = JSON.stringify(countryMap, null, 2);
 		// Save the file locally
-		let a = document.createElement("a");
+		let downloadElement = document.createElement("a");
 		let file = new Blob([jsonData], {type: 'text/plain'});
-		a.href = URL.createObjectURL(file);
-		a.download = "country_locations.json";
-		a.click();
+		downloadElement.href = URL.createObjectURL(file);
+		downloadElement.download = "country_locations.json";
+		downloadElement.click();
 		// Stop capture mode
-		mode = "play";
+		mode = "ready";
 	}
 	else {
+		//countryData = pointerPos;
+		//countryData["index"] = 
 		countryMap[country] = pointerPos;
 	}
 }
@@ -199,6 +335,7 @@ function countryClick(pointerPos) {
 		}
 	}
 	alert(closestCountry);  // For now, just show the country; we'll do more later of course
+	return closestCountry;
 }
 
 /**
@@ -219,9 +356,10 @@ function rollDice(modalTitle, resultsSuffix) {
 	paintDieRoll("die-2", die2);
 	
 	if(die1 > die2)
-		winner = "Player 1";
-	else winner = "Player 2";
-	diceRoller.results.innerText = winner + " " + resultsSuffix;
+		winner = 1;
+	else winner = 2;
+	diceRoller.results.innerText = "Player " + winner + " " + resultsSuffix;
+	return winner;
 }
 
 /**
@@ -244,6 +382,16 @@ function paintDieRoll(dieElement, number) {
 	dieImage.alt = number;
 	diceRoller["body"].replaceChild(dieImage, diceRoller[dieElement]);
 	diceRoller[dieElement] = dieImage;
+}
+
+/**
+ * @returns true if the player is an AI/NPC player, false if it's the player playing this game.
+ */
+function isPlayerNPC(player=null) {
+	if(!player) {
+		player = currentPlayer;
+	}
+	return player != ACTIVE_PLAYER_NUM;
 }
 
 /**
