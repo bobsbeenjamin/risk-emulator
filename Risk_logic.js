@@ -21,6 +21,7 @@ var playerOrder = []; // Determined at game start; the order of play
 var roundCounter = 0; // Which round we're on; a round is complete once each player takes a turn
 var song = null; // Holds the current music track
 var turnCounter = 0; // Which turn we're on; each player gets one turn per round
+var waitingForUserAction = false; // Used for async hack (change later dude)
 
 /**
  * Initializes the global vars. Run this only once per game.
@@ -102,16 +103,7 @@ function startGame() {
 	initializeCountries();
 	initializePlayerColors();
 	// Place armies
-	mode = "placingArmies";
-	var initialPlacement = true;
-	let startingNumberOfArmies = 50 - (5 * numPlayers);
-	for(let i = 0; i < startingNumberOfArmies; i++) {
-		for(player in playerOrder) {
-			currentPlayer = player;
-			if(isPlayerNPC(player))
-				placeArmy(player);
-		}
-	}
+	firstPlacementOfArmies();
 	// Prepare for the first turn
 	// Launch first turn
 	mode = "playing";
@@ -140,6 +132,36 @@ function initializePlayerColors() {
 }
 
 /**
+ * Place armies at the beginning of the game.
+ */
+function firstPlacementOfArmies() {
+	mode = "placingArmies";
+	var initialPlacement = true;
+	let startingNumberOfArmies = 50 - (5 * numPlayers);
+	for(let i = 0; i < startingNumberOfArmies; i++) {
+		for(player of playerOrder) {
+			currentPlayer = player;
+			if(isPlayerNPC(player)) {
+				placeArmy(player);
+			}
+			else {
+				waitingForUserAction = true;
+				waitForUserAction();
+			}
+		}
+	}
+}
+
+/**
+ * HACK
+ */
+function waitForUserAction() {
+	if(waitingForUserAction) {
+		setTimeout(waitForUserAction, 100); // wait 100 milliseconds then recheck
+	}
+}
+
+/**
  * Keep playing the game until there is a winner. (this is recursive)
  */
 function mainGameLoop(round=1) {
@@ -147,7 +169,7 @@ function mainGameLoop(round=1) {
 	for(player in playerOrder) {
 		currentPlayer = player;
 		turnCounter += 1;
-		takeTurn(player);
+		takeTurn(player);  // TODO: Implement
 	}
 	mainGameLoop(round + 1);
 }
@@ -158,6 +180,7 @@ function mainGameLoop(round=1) {
  */
 function placeArmy(player, country=null) {
 	// For NPC, place an army. For the active player, this function is called from handleScreenClick.
+	let initialPlacement = false; // FIXME: Make this var work!
 	if(isPlayerNPC()) {
 		country = getRandomCountry();
 		while(initialPlacement && country.numArmies == 0) {
@@ -180,15 +203,18 @@ function placeArmy(player, country=null) {
 		if(numCountriesWithArmies >= 50)
 			initialPlacement = false;
 	}
+	waitingForUserAction = false;
 }
 
 /**
  * @returns A random country.
+ * Credit: https://stackoverflow.com/a/15106541/2221645
  */
 function getRandomCountry() {
-	let countryIdx = getRandomInt(0, 49); // Get a random country index
+	let countryIdx = getRandomInt(0, 41); // Get a random country index
 	let keys = Object.keys(countries); // Get the country names
 	let country = countries[keys[countryIdx]]; // Get a random country
+	//let country = countries[keys[ keys.length * Math.random() << 0 ]]; // Get a random country
 	if(!country.hasOwnProperty("numArmies"))
 		country.numArmies = 0;
 	return country;
@@ -272,7 +298,7 @@ function handleScreenClick(event) {
 		captureCountryLocations(pointerPos);
 	}
 	else if(mode == "placingArmies" && !isPlayerNPC()) {
-		country = countryClick(pointerPos);
+		let country = countryClick(pointerPos);
 		placeArmy(currentPlayer, country);
 	}
 	// TODO: Add more states and function calls to handle those states
