@@ -19,7 +19,7 @@ var mode = "startup"; // Gamestate mode: "playing" means a game is in progress
 var musicList = {}; // Holds Audio objects to load and play music
 var numCountriesWithArmies = 0; // How many countries have armies on them; only used during startup
 var numPlayers = 2; // The number of players in the game
-var players = []; // The list of players, represented as objects
+var playerColors = []; // The colors for each player
 var playerOrder = []; // Determined at game start; the order of play
 var randomSetup = false; // Place armies randomly at game start?
 var roundCounter = 0; // Which round we're on; a round is complete once each player takes a turn
@@ -104,7 +104,7 @@ function startGame() {
 	randomSetup = Boolean(document.getElementById("settings-choose-countries-randomly").value);
 	// Prepare for the first turn
 	initializeCountries();
-	initializePlayers();
+	initializePlayerColors();
 	// Decide who goes first
 	firstPlayer = rollDice("Decide who goes first", "goes first");
 	if(firstPlayer == 1)  // TODO: Make this more dynamic for more than 2 players
@@ -131,11 +131,12 @@ function initializeCountries() {
 /**
  * Give each player a color. // TODO: Let the player choose colors
  */
-function initializePlayers() {
-	players = [];
-	let colorPalette = ["blue", "red", "yellow", "brown", "pink", "orange"];
-	for(let i = 0; i < numPlayers; i++) {
-		players[i] = {"number": i + 1, "color": colorPalette[i]};
+function initializePlayerColors() {
+	// The player ids are 1-based, not 0-based, so start with a bad value for the 0 index of player
+	let colorPalette = ["BADVAL", "blue", "red", "yellow", "brown", "pink", "orange"];
+	playerColors = [];
+	for(let i = 0; i <= numPlayers; i++) {
+		playerColors[i] = colorPalette[i];
 	}
 }
 
@@ -240,7 +241,7 @@ function drawArmiesForCountry(country) {
 	}
 	let x = country.x - 15; // Make the country's x the center of the rectangle
 	let y = country.y + 5; // Draw the armies a little below the country name
-	let color = players[country.controller];
+	let color = playerColors[country.controller];
 	// Draw a rectangle the color of the player, with the number of armies in white
 	drawSpace.fillStyle = color;  // FIXME: First country is always black, and blue doesn't work
 	drawSpace.fillRect(x, y, 30, 20);
@@ -408,9 +409,9 @@ function rollDice(modalTitle, resultsSuffix) {
  */
 function getPlayerColorsString() {
 	let returnValue = "";
-	for(let i = 0; i < numPlayers; i++) {
-		returnValue += "Player " + (i+1) + " is " + playerColors[i];
-		if(i < numPlayers - 1)
+	for(let i = 1; i <= numPlayers; i++) {
+		returnValue += "Player " + i + " is " + playerColors[i];
+		if(i < numPlayers)
 			returnValue += " | ";
 	}
 	return returnValue;
