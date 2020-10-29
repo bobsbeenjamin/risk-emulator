@@ -25,7 +25,6 @@
   <br/>
   <p id="textDisplayArea">Click a button below, or click the screen to start</p>
   <button onclick="startGame()">Start Game</button>
-  <button onclick="muteButton()">Mute/Unmute</button>
   <button type="button" onclick="loadSong();" data-toggle="modal" data-target="#settingsMenu">Settings</button>
   
   <!-- Settings Menu -->
@@ -37,11 +36,17 @@
           <h4 class="modal-title">Settings</h4>
         </div>
         <div class="modal-body">
-          <form>
+          <form id="settings-form">
+			<h4>Generic Settings</h4>
+			<label for="settings-muted">Mute: </label>
+			<input type="checkbox" id="settings-muted" name="settings-muted" onclick="muteHandler();">
+			<hr/>
+			
+			<h4>Settings for Starting a New Game</h4>
 			<label for="settings-num-players">Number of Players: </label>
-			<input type="number" id="settings-num-players" name="settings-num-players" min=2 max=6 value=2>
+			<input type="number" id="settings-num-players" name="settings-num-players" class="new-game-setting" min=2 max=6 value=2>
 			<label for="settings-choose-countries-randomly">Choose Countries Randomly: </label>
-			<input type="checkbox" id="settings-choose-countries-randomly" name="settings-choose-countries-randomly" checked>
+			<input type="checkbox" id="settings-choose-countries-randomly" name="settings-choose-countries-randomly" class="new-game-setting" checked>
           </form>
         </div>
         <div class="modal-footer">

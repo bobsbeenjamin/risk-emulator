@@ -6,13 +6,13 @@ TODO:
 		Support local human players (on the same device)
 		Support remote human players (playing over the net)
 	Settings:
-		Move mute to settings
 		Choose player colors
 		When selecting number of players, give up and down buttons
 		Set music themes
 		Choose skins
 	Sounds:
 		Music:
+			Load intro music at game load
 			Support music themes
 			Scrape and upload different songs
 			Add different types of music to different parts of the game
@@ -20,6 +20,10 @@ TODO:
 			Support effects
 			Dice rolls
 			Victory shout
+	Misc:
+		When clicking off a modal to close it, behave as though a close button was pressed
 	
 DONE:
+	Settings:
+		Move mute to settings
 	

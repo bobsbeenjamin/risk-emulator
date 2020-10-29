@@ -32,9 +32,15 @@ var waitingForUserAction = false; // Used for async hack (change later dude)
  */
 function setUpGameBoard(onLoad=false) {
 	if(onLoad) {
+		// Read settings and set up settings responsiveness
+		readSettings();
+		$("#new-game-settings").change(function() {
+			$("#settings-form").data("changed", true);
+		});
+		
 		// Get audio ready
 		try {
-			audio = new Audio("music/SecretofMana_IntoTheThickOfItAcapella_SmoothMcGroove.mp3");
+			let audio = new Audio("music/SecretofMana_IntoTheThickOfItAcapella_SmoothMcGroove.mp3");
 			musicList.backgroundMusic1 = audio;
 			audio = new Audio("music/AvengersSuite_Theme.mp3");
 			musicList.battleMusic1 = audio;
@@ -61,6 +67,9 @@ function setUpGameBoard(onLoad=false) {
 		drawSpace.font = "14px Arial";
 		htmlCanvasElement.addEventListener("click", handleScreenClick);
 		
+		// Parse URL params
+		parseUrlParams();
+		
 		// Prep the map image
 		mapImage = new Image();
 		mapImage.onload = drawMap;
@@ -68,10 +77,16 @@ function setUpGameBoard(onLoad=false) {
 		
 		// Draw the map
 		drawMap();
-		
-		// Parse URL params
-		parseUrlParams();
 	}
+}
+
+/**
+ * Read user selections from the settings modal.
+ */
+function readSettings() {
+	isMuted = ($("#settings-muted").is(":checked"));
+	numPlayers = parseInt(document.getElementById("settings-num-players").value);
+	randomSetup = ($("#settings-choose-countries-randomly").is(":checked"));
 }
 
 /**
@@ -100,8 +115,7 @@ function startGame() {
 			return;
 	}
 	// Read settings
-	numPlayers = parseInt(document.getElementById("settings-num-players").value);
-	randomSetup = Boolean(document.getElementById("settings-choose-countries-randomly").value);
+	readSettings();
 	// Prepare for the first turn
 	initializeCountries();
 	initializePlayerColors();
@@ -261,17 +275,23 @@ function getRandomInt(min, max) {
 }
 
 /**
- * Load a song.
+ * Load a song and play it if not muted.
  */
 function loadSong(songStr="mainMenu1") {
 	song = musicList[songStr];
-	song.play();
+	muteHandler();
 }
 
 /**
  * Commit the settings. Warn user of a reload.
  */
 function saveSettings() {
+	if($("#settings-form").data("changed")) {
+		if(confirm("Would you like to start a new game?")) {
+			setUpGameBoard(true);
+		}
+		$("#settings-form").data("changed", false);
+	}
 	closeModal();
 }
 
@@ -450,15 +470,17 @@ function isPlayerNPC(player=null) {
 }
 
 /**
- * Handle the "Mute/Unmute" button.
+ * Handle the "Mute" checkbox.
  */
-function muteButton() {
+function muteHandler() {
+	isMuted = ($("#settings-muted").is(":checked"));
+	if(!song)
+		return;
 	if(isMuted) {
-		song.muted = false; 
-		isMuted = false;
+		song.muted = true;
 	}
 	else {
-		song.muted = true; 
-		isMuted = true;
+		song.muted = false;
+		song.play();
 	}
 }
