@@ -7,7 +7,8 @@ TODO:
 		Support remote human players (playing over the net)
 	Settings:
 		Move mute to settings
-		Choose colors
+		Choose player colors
+		When selecting number of players, give up and down buttons
 		Set music themes
 		Choose skins
 	Sounds:
