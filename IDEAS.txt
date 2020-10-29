@@ -1,12 +1,24 @@
 
-Possible fun futures:
-	"Skins"
-		Each skin would consist of: A map, with unique territories (that I would have to point in countinents), and songs for the various screens
-		Skins would be built around themes, such as:
-			Legend of Zelda: Hyrule
-			Lord of the Rings: Middle Earth
-			Shadowrun: Redrawn Earth
-
-Possible music scores:
-	P.I. Tchaikovsky – Swan Lake, Act II: No.10 Scene (Moderato)
-
+TODO:
+	Players:
+		Allow for more than 2 players
+		Support AI players
+		Support local human players (on the same device)
+		Support remote human players (playing over the net)
+	Settings:
+		Move mute to settings
+		Choose colors
+		Set music themes
+		Choose skins
+	Sounds:
+		Music:
+			Support music themes
+			Scrape and upload different songs
+			Add different types of music to different parts of the game
+		Sound effects:
+			Support effects
+			Dice rolls
+			Victory shout
+	
+DONE:
+	

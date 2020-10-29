@@ -1,0 +1,38 @@
+
+Possible fun futures:
+	"Skins":
+		Each skin would consist of: A map, with unique territories (that I would have to point in countinents), and songs for the various screens
+		Skins would be built around themes, such as:
+			Legend of Zelda: Hyrule
+			Lord of the Rings: Middle Earth
+			Shadowrun: Redrawn Earth
+			Starcraft: Koprulu Sector
+			Warcraft: Azeroth
+	Music sets/themes:
+		User could select in settings
+		Would be independent of skins, but skins would/could overwrite this
+		Possible music themes:
+			Classical music
+			SSB
+			Marvel
+			Batman/Superman
+			Pirates of the Caribbean
+
+Possible music scores:
+	Listen here for inspiration: https://www.youtube.com/watch?v=-7jjo8UICjQ
+	Main screen / waiting music:
+		Serene: P.I. Tchaikovsky – Swan Lake, Act II: No.10 Scene (Moderato)
+		Important: Antonin Dvorak – Symphony no. 9 in E minor ("From the New world": IV. Allegro con fuoco)
+		Mischievous: Edvard Grieg – In the Hall of the Mountain King  [played when contraptions go off]
+		Moody (multiple moods in multiple movements): Ludwig van Beethoven – The Symphony No.5 in C minor (fragment)
+	Settings:
+		Melancholy: Claude Debussy – Clair de lune (from "Suite bergamasque")  [Ending of Ocean's 11]
+		Eerie: J.S.Bach – Toccata and Fugue in D minor, BWV 565  [Dracula music]
+	Battle:
+		Intense: Modest Mussorgsky – Night on Bald Mountain  [Demon from Fantasia]
+	Final battle:
+		Urgent: N.Rimsky-Korsakov – Flight of the Bumblebee (from "The Tale of Tsar Saltan")
+	Victory music:
+		???
+	Defeat music:
+		Somber: Frederic Chopin – Funeral March (Piano Sonata No.2 in B flat minor Op 35: III. Marche Funebre)  ["Pray for the dead"]
