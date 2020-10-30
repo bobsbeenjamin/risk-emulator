@@ -1,5 +1,23 @@
 
 TODO:
+	Gameplay:
+		Placing armies:
+			Initial placement:
+				Wait for the human player to place an army before the AI places their next army
+				Add logic for option to claim contries manually (random placement already works)
+			Turn-based placement:
+				Calculate number armies for reinforcement
+			Card reimbursements:
+				Allow human player to trade back cards for armies
+				Add dumb logic for AI to trade back cards
+				Enforce card trading when 5+ cards are in hand
+		Taking turns:
+			Get the turn taking loop working
+		Battles:
+			Allow the human player to attack
+			Add dumb logic for AI to attack
+			When a player is eliminated, give their cards to the victor
+			Detect final battle
 	Players:
 		Allow for more than 2 players
 		Support AI players
@@ -10,6 +28,7 @@ TODO:
 		When selecting number of players, give up and down buttons
 		Set music themes
 		Choose skins
+		AI difficulty
 	Sounds:
 		Music:
 			Load intro music at game load
@@ -22,6 +41,8 @@ TODO:
 			Victory shout
 	Misc:
 		When clicking off a modal to close it, behave as though a close button was pressed
+	Bugs:
+		Make "Would you like to start a new game?" work
 	
 DONE:
 	Settings:
