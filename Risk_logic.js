@@ -6,13 +6,16 @@ See https://github.com/bobsbeenjamin/risk-emulator for license and disclaimers
 
 /// Globals ///
 const ACTIVE_PLAYER_NUM = 1; // Indicates which player is the person playing the game
+const NUMBER_OF_COUNTRIES = 42; // The total number of countries on the map
+
+var armiesLeftToPlace = []; // Number of armies each player needs to place; used during reinforcment and initial placement
 var boardDim = 100 + 10; // leave a padding of 5 on each side of the visible board
 var currentPlayer = 0; // The player whose turn it is
 var countryMap = {}; // Only used when in country location capture mode
 var drawSpace = null; // Holds the HTML canvas context
 var diceRoller = {}; // Object with data and UI elements for the dice roller modal
 var htmlCanvasElement = null; // Holds the HTML canvas element (useful for sizing)
-var initialPlacement = true; // Are we still filling the board?
+var someCountriesAreUnclaimed = true; // Are we still filling the board?
 var isMuted = false; // Is the background music muted?
 var mapImage = null; // The map image that we draw on
 var mode = "startup"; // Gamestate mode: "playing" means a game is in progress
@@ -21,7 +24,7 @@ var numCountriesWithArmies = 0; // How many countries have armies on them; only 
 var numPlayers = 2; // The number of players in the game
 var playerColors = []; // The colors for each player
 var playerOrder = []; // Determined at game start; the order of play
-var randomSetup = false; // Place armies randomly at game start?
+var randomArmyPlacement = false; // Place armies randomly at game start?
 var roundCounter = 0; // Which round we're on; a round is complete once each player takes a turn
 var song = null; // Holds the current music track
 var turnCounter = 0; // Which turn we're on; each player gets one turn per round
@@ -86,7 +89,7 @@ function setUpGameBoard(onLoad=false) {
 function readSettings() {
 	isMuted = ($("#settings-muted").is(":checked"));
 	numPlayers = parseInt(document.getElementById("settings-num-players").value);
-	randomSetup = ($("#settings-choose-countries-randomly").is(":checked"));
+	randomArmyPlacement = ($("#settings-choose-countries-randomly").is(":checked"));
 }
 
 /**
@@ -109,7 +112,7 @@ function parseUrlParams() {
  */
 function startGame() {
 	// Give the player an option to abort while a game is going
-	if(mode == "playing" || mode == "placingArmies") {
+	if(["initialPlacement", "placingArmies", "playing"].includes(mode)) {
 		startNewGame = confirm("Do you want to abandon this game and start a new game?");
 		if(!startNewGame)
 			return;
@@ -140,6 +143,8 @@ function initializeCountries() {
 		countries[country].numArmies = 0;
 		countries[country].controller = 0;
 	}
+	someCountriesAreUnclaimed = true;
+	numCountriesWithArmies = 0;
 }
 
 /**
@@ -158,33 +163,15 @@ function initializePlayerColors() {
  * Place armies at the beginning of the game.
  */
 function firstPlacementOfArmies() {
-	mode = "placingArmies";
-	initialPlacement = true;
-	let startingNumberOfArmies = 50 - (5 * numPlayers);
-	startingNumberOfArmies = 21;
-	for(let i = 0; i < startingNumberOfArmies; i++) {
-		for(player of playerOrder) {
-			currentPlayer = player;
-			// NPCs always choose randomly (for now); also possibly choose randomly for the player,
-			// depending on the randomSetup setting
-			if(isPlayerNPC(player) || (randomSetup && initialPlacement)) {
-				placeArmy(player);
-			}
-			else {
-				waitingForUserAction = true;
-				waitForUserAction();
-			}
-		}
+	mode = "initialPlacement";
+	const startingNumberOfArmies = 50 - (5 * numPlayers);
+	armiesLeftToPlace = [];
+	for(player of playerOrder) {
+		armiesLeftToPlace[player] = startingNumberOfArmies;
 	}
-}
-
-/**
- * HACK
- */
-function waitForUserAction() {
-	if(waitingForUserAction) {
-		setTimeout(waitForUserAction, 100); // wait 100 milliseconds then recheck
-	}
+	currentPlayer = playerOrder[0];
+	// placeArmy will call placeAnotherArmy until all armies are placed
+	placeArmy();
 }
 
 /**
@@ -202,17 +189,22 @@ function mainGameLoop(round=1) {
 
 /**
  * Place an army on the game board. If the player is an NPC, then choose a country at random.
- * If initialPlacement is true, then force placement on a country with no armies.
+ * If someCountriesAreUnclaimed is true, then force placement on a country with no armies.
  */
-function placeArmy(player, country=null) {
+function placeArmy(player=currentPlayer, country=null) {
+	if(armiesLeftToPlace[currentPlayer] == 0) {
+		console.warn("Someone tried to place an army when they have no armies left to place. Ignoring.");
+		return;
+	}
+	
 	// For NPC, place an army. For the active player, this function is called from handleScreenClick.
 	if(isPlayerNPC() || !country) {
 		country = getRandomCountry();
-		while(initialPlacement && country.numArmies > 0) {
+		while(someCountriesAreUnclaimed && country.numArmies > 0) {
 			country = getRandomCountry();
 		}
 	}
-	else if(initialPlacement && country.numArmies > 0) {
+	else if(someCountriesAreUnclaimed && country.numArmies > 0) {
 		alert("Choose a country with no armies until the world is full.");
 		return;
 	}
@@ -222,13 +214,16 @@ function placeArmy(player, country=null) {
 	country.numArmies += 1;
 	drawArmiesForCountry(country);
 	
-	// Handle initialPlacement logic. We count up numCountriesWithArmies until the world is full.
-	if(initialPlacement) {
+	// Handle someCountriesAreUnclaimed logic. We count up numCountriesWithArmies until the world is full.
+	if(someCountriesAreUnclaimed) {
 		numCountriesWithArmies += 1;
-		if(numCountriesWithArmies >= 50)
-			initialPlacement = false;
+		if(numCountriesWithArmies >= NUMBER_OF_COUNTRIES)
+			someCountriesAreUnclaimed = false;
 	}
-	waitingForUserAction = false;
+	
+	// This will end up calling placeArmy if there are any armies left to place for the current player
+	armiesLeftToPlace[currentPlayer] -= 1;
+	placeAnotherArmy();
 }
 
 /**
@@ -261,6 +256,28 @@ function drawArmiesForCountry(country) {
 	drawSpace.fillRect(x, y, 30, 20);
 	drawSpace.fillStyle = "white";
 	drawSpace.fillText(country.numArmies.toString(), x + 10, y + 13);
+}
+
+/**
+ * Place another army. If mode is "initialPlacement", then the next player places. Otherwise, the
+ * current player places.
+ */
+function placeAnotherArmy() {
+	if(!["placingArmies", "initialPlacement"].includes(mode))
+		console.error("placeAnotherArmy() was called outside of an army placement state");
+	if(mode == "initialPlacement")
+		getNextPlayer();
+	if(armiesLeftToPlace[currentPlayer] && (isPlayerNPC() || (randomArmyPlacement && armiesLeftToPlace))) {
+		placeArmy();
+	}
+}
+
+/**
+ * Find out whose turn it is, then set the turn to the next player in playerOrder.
+ */
+function getNextPlayer() {
+	currentPlayerIdx = playerOrder.indexOf(currentPlayer);
+	currentPlayer = playerOrder[(currentPlayerIdx + 1) % playerOrder.length];
 }
 
 /**
@@ -332,7 +349,7 @@ function handleScreenClick(event) {
 	if(mode == "countryCapture") {
 		captureCountryLocations(pointerPos);
 	}
-	else if(mode == "placingArmies" && !isPlayerNPC()) {
+	else if(["placingArmies", "initialPlacement"].includes(mode) && !isPlayerNPC()) {
 		let country = countryClick(pointerPos);
 		placeArmy(currentPlayer, country);
 	}

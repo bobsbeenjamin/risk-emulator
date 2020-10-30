@@ -40,6 +40,8 @@ TODO:
 			Dice rolls
 			Victory shout
 	Misc:
+		Rename playerOrder to turnOrder?
+		Refactor playerOrder, playerColors, etc to all be in a players array or object?
 		When clicking off a modal to close it, behave as though a close button was pressed
 	Bugs:
 		Make "Would you like to start a new game?" work
