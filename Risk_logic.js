@@ -131,8 +131,8 @@ function startGame() {
 	// Place armies
 	firstPlacementOfArmies();
 	// Launch first turn
-	mode = "playing";
-	mainGameLoop();
+	// mode = "playing";
+	// mainGameLoop();
 }
 
 /**
@@ -208,8 +208,13 @@ function placeArmy(player=currentPlayer, country=null) {
 		alert("Choose a country with no armies until the world is full.");
 		return;
 	}
+	else if(country.controller && country.controller != player) {
+		alert("That's not your country!");
+		return;
+	}
 	
 	// Place the army
+	country = getCountry(country);
 	country.controller = player;
 	country.numArmies += 1;
 	drawArmiesForCountry(country);
@@ -224,6 +229,21 @@ function placeArmy(player=currentPlayer, country=null) {
 	// This will end up calling placeArmy if there are any armies left to place for the current player
 	armiesLeftToPlace[currentPlayer] -= 1;
 	placeAnotherArmy();
+	if(!thereAreArmiesLeftToPlace) {
+		mode = "playing";
+		mainGameLoop();
+	}
+}
+
+/**
+ * @param country: Either a country name (string) or a country object.
+ * @returns A country object.
+ */
+function getCountry(country) {
+	if(typeof country == "string") {
+		country = countries[country];
+	}
+	return country;
 }
 
 /**
@@ -245,14 +265,12 @@ function getRandomCountry() {
  */
 function drawArmiesForCountry(country) {
 	// Accept either a country key or object
-	if(typeof country == "string") {
-		country = countries[country];
-	}
+	country = getCountry(country);
 	let x = country.x - 15; // Make the country's x the center of the rectangle
 	let y = country.y + 5; // Draw the armies a little below the country name
 	let color = playerColors[country.controller];
 	// Draw a rectangle the color of the player, with the number of armies in white
-	drawSpace.fillStyle = color;  // FIXME: First country is always black, and blue doesn't work
+	drawSpace.fillStyle = color;
 	drawSpace.fillRect(x, y, 30, 20);
 	drawSpace.fillStyle = "white";
 	drawSpace.fillText(country.numArmies.toString(), x + 10, y + 13);
@@ -263,11 +281,17 @@ function drawArmiesForCountry(country) {
  * current player places.
  */
 function placeAnotherArmy() {
-	if(!["placingArmies", "initialPlacement"].includes(mode))
+	if(!["placingArmies", "initialPlacement"].includes(mode)) {
 		console.error("placeAnotherArmy() was called outside of an army placement state");
+		return;
+	}
+	if(!thereAreArmiesLeftToPlace()) {
+		mode = "playing";
+		return;
+	}
 	if(mode == "initialPlacement")
 		getNextPlayer();
-	if(armiesLeftToPlace[currentPlayer] && (isPlayerNPC() || (randomArmyPlacement && armiesLeftToPlace))) {
+	if(armiesLeftToPlace[currentPlayer] && (isPlayerNPC() || (randomArmyPlacement && someCountriesAreUnclaimed))) {
 		placeArmy();
 	}
 }
@@ -349,7 +373,10 @@ function handleScreenClick(event) {
 	if(mode == "countryCapture") {
 		captureCountryLocations(pointerPos);
 	}
-	else if(["placingArmies", "initialPlacement"].includes(mode) && !isPlayerNPC()) {
+	else if(isPlayerNPC()) { // We don't usually do anyting when it's not a human's turn
+		return;
+	}
+	else if(["placingArmies", "initialPlacement"].includes(mode)) {
 		let country = countryClick(pointerPos);
 		placeArmy(currentPlayer, country);
 	}
@@ -412,7 +439,7 @@ function countryClick(pointerPos) {
 			closestCountry = country;
 		}
 	}
-	alert(closestCountry);  // For now, just show the country; we'll do more later of course
+	//alert(closestCountry);  // Uncomment to debug
 	return closestCountry;
 }
 
@@ -484,6 +511,13 @@ function isPlayerNPC(player=null) {
 		player = currentPlayer;
 	}
 	return player != ACTIVE_PLAYER_NUM;
+}
+
+/**
+ * @returns true if any element in armiesLeftToPlace is greater than 0, false otherwise.
+ */
+function thereAreArmiesLeftToPlace() {
+	return armiesLeftToPlace.some(item => item > 0);
 }
 
 /**
