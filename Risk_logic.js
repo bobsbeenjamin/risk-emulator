@@ -63,6 +63,10 @@ function setUpGameBoard(onLoad=false) {
 		diceRoller["results"] = document.getElementById("dice-roller-results");
 		diceRoller["die-1"] = document.getElementById("dice-roller-die-1");
 		diceRoller["die-2"] = document.getElementById("dice-roller-die-2");
+		diceRoller["die-3"] = document.getElementById("dice-roller-die-3");
+		diceRoller["die-4"] = document.getElementById("dice-roller-die-4");
+		diceRoller["die-5"] = document.getElementById("dice-roller-die-5");
+		diceRoller["die-6"] = document.getElementById("dice-roller-die-6");
 		diceRoller["player-info"] = document.getElementById("dice-roller-player-info");
 		diceRoller["roll-again"] = document.getElementById("dice-roller-roll-again");
 		
@@ -126,11 +130,8 @@ function startGame() {
 	initializeCountries();
 	initializePlayerColors();
 	// Decide who goes first
-	firstPlayer = rollDice("Decide who goes first", "goes first", true);
-	if(firstPlayer == 1)  // TODO: Make this more dynamic for more than 2 players
-		playerOrder = [1, 2];
-	else
-		playerOrder = [2, 1];
+	const firstPlayer = rollDice("Roll to decide who goes first", "goes first", true, numPlayers);
+	setPlayerOrder(firstPlayer);
 	// Place armies
 	firstPlacementOfArmies();
 	// Launch first turn
@@ -159,6 +160,19 @@ function initializePlayerColors() {
 	playerColors = [];
 	for(let i = 0; i <= numPlayers; i++) {
 		playerColors[i] = colorPalette[i];
+	}
+}
+
+/**
+ * Determine and store player order. Play goes "to the left," meaning from the smalles to biggest
+ * player number.
+ */
+function setPlayerOrder(firstPlayer) {
+	playerOrder = [];
+	for(let i=0; i<numPlayers; i++) {
+		// The player ids are 1-based, not 0-based, hence the funny-looking mod logic
+		// Credit: https://stackoverflow.com/a/3803420/2221645
+		playerOrder.push((firstPlayer + i - 1) % numPlayers + 1); 
 	}
 }
 
@@ -488,25 +502,34 @@ function countryClick(pointerPos) {
 /**
  * Roll the dice. This updates the UI.
  */
-function rollDice(modalTitle, resultsSuffix, breakTies=false) {
+function rollDice(modalTitle, resultsSuffix, breakTies=false, numPlayers=2) {
+	// Some UI stuff
 	loadSong("battleMusic1");
 	diceRoller.title.innerText = modalTitle;
 	diceRoller.results.innerText = "";
-	diceRoller["parent"].modal("show");
-	let die1 = die2 = 0;
+	// Initial roll
+	let diceArray = [];
+	for(let i=0; i< numPlayers; i++) {
+		diceArray.push(getDieRoll());
+	}
 	// Break ties
 	if(breakTies) {
-		while(die1 == die2) {
-			die1 = getDieRoll();
-			die2 = getDieRoll();
+		function hasDuplicates(array) {  // Credit: https://stackoverflow.com/a/7376645/2221645
+			return (new Set(array)).size !== array.length;
+		}
+		while(hasDuplicates(diceArray)) {
+			diceArray = [];
+			for(let i=0; i< numPlayers; i++) {
+				diceArray.push(getDieRoll());
+			}
 		}
 	}
-	paintDieRoll("die-1", die1);
-	paintDieRoll("die-2", die2);
-	
-	if(die1 > die2)
-		winner = 1;
-	else winner = 2;
+	// Some more UI stuff
+	paintDiceRolls(diceArray);
+	diceRoller["parent"].modal("show");
+	// Determine winner
+	let winner = diceArray.indexOf(Math.max(...diceArray)) + 1; // Add 1 because players are 1-based
+	// Final UI stuff, and return winner
 	diceRoller.results.innerText = "Player " + winner + " " + resultsSuffix;
 	diceRoller["player-info"].innerText = getPlayerColorsString();
 	return winner;
@@ -535,10 +558,19 @@ function getDieRoll() {
 }
 
 /**
+ * Display all the dice rolled.
+ */
+function paintDiceRolls(diceArray) {
+	for(let i=0; i<diceArray.length; i++) {
+		let dieElementName = "die-" + (i + 1);
+		paintDieRoll(dieElementName, diceArray[i]);
+	}
+}
+
+/**
  * Display a singe die roll.
  */
 function paintDieRoll(dieElement, number) {
-	//dieImage = new Image();
 	dieImage = document.createElement("img");
 	dieImage.src = "images/die-white-" + number + ".png";
 	dieImage.width = dieImage.height = 50;

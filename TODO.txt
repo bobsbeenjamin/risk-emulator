@@ -18,7 +18,6 @@ TODO:
 				Play special music
 				Tell the user that it's the final battle
 	Players:
-		Allow for more than 2 players
 		Support AI players
 		Support local human players (on the same device)
 		Support remote human players (playing over the net)
@@ -44,6 +43,7 @@ TODO:
 		Refactor playerOrder, playerColors, etc to all be in a players array or object?
 		When clicking off a modal to close it, behave as though a close button was pressed
 	Bugs:
+		The first army is placed for me when I go first and I am using manual placement
 		Make "Would you like to start a new game?" work when changing new game settings
 	
 DONE:
@@ -55,6 +55,8 @@ DONE:
 				Wait for the human player to place an army before the AI places their next army
 				Add logic for option to claim contries manually (random placement already works)
 			Refactor getRandomCountry() to filter on valid countries
+	Players:
+		Allow for more than 2 players
 	Settings:
 		Move mute to settings
 	
