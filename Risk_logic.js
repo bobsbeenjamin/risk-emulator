@@ -7,6 +7,7 @@ See https://github.com/bobsbeenjamin/risk-emulator for license and disclaimers
 /// Globals ///
 const ACTIVE_PLAYER_NUM = 1; // Indicates which player is the person playing the game
 const NUMBER_OF_COUNTRIES = 42; // The total number of countries on the map
+const PHASE_ORDER = ["placeArmies", "attack", "nonCombat", "end"]; // The phases of a turn
 
 var armiesLeftToPlace = []; // Number of armies each player needs to place; used during reinforcment and initial placement
 var boardDim = 100 + 10; // leave a padding of 5 on each side of the visible board
@@ -18,7 +19,7 @@ var htmlCanvasElement = null; // Holds the HTML canvas element (useful for sizin
 var someCountriesAreUnclaimed = true; // Are we still filling the board?
 var isMuted = false; // Is the background music muted?
 var mapImage = null; // The map image that we draw on
-var mode = "startup"; // Gamestate mode: "playing" means a game is in progress
+var gameState = "startup"; // Gamestate mode: "playing" means a game is in progress
 var musicList = {}; // Holds Audio objects to load and play music
 var numCountriesWithArmies = 0; // How many countries have armies on them; only used during startup
 var numPlayers = 2; // The number of players in the game
@@ -28,6 +29,7 @@ var randomArmyPlacement = false; // Place armies randomly at game start?
 var roundCounter = 0; // Which round we're on; a round is complete once each player takes a turn
 var song = null; // Holds the current music track
 var turnCounter = 0; // Which turn we're on; each player gets one turn per round
+var turnPhase = ""; // The current phase for the current turn
 var waitingForUserAction = false; // Used for async hack (change later dude)
 
 /**
@@ -102,7 +104,7 @@ function parseUrlParams() {
 	let doCaptureCountryLocations = url.searchParams.get("doCaptureCountryLocations") || null;
 	if(doCaptureCountryLocations) {
 		alert("Entering country location capture mode");
-		mode = "countryCapture";
+		gameState = "countryCapture";
 	}
 }
 
@@ -112,7 +114,7 @@ function parseUrlParams() {
  */
 function startGame() {
 	// Give the player an option to abort while a game is going
-	if(["initialPlacement", "placingArmies", "playing"].includes(mode)) {
+	if(["initialPlacement", "placingArmies", "playing"].includes(gameState)) {
 		startNewGame = confirm("Do you want to abandon this game and start a new game?");
 		if(!startNewGame)
 			return;
@@ -131,7 +133,7 @@ function startGame() {
 	// Place armies
 	firstPlacementOfArmies();
 	// Launch first turn
-	// mode = "playing";
+	// gameState = "playing";
 	// mainGameLoop();
 }
 
@@ -163,7 +165,7 @@ function initializePlayerColors() {
  * Place armies at the beginning of the game.
  */
 function firstPlacementOfArmies() {
-	mode = "initialPlacement";
+	gameState = "initialPlacement";
 	const startingNumberOfArmies = 50 - (5 * numPlayers);
 	armiesLeftToPlace = [];
 	for(player of playerOrder) {
@@ -185,6 +187,30 @@ function mainGameLoop(round=1) {
 		takeTurn(player);  // TODO: Implement
 	}
 	mainGameLoop(round + 1);
+}
+
+/**
+ * Transition game state (turnPhase and gameState) based on current state.
+ */
+function transitionGameState() {
+	// When state is "playing", transition turn phase
+	if(gameState == "playing") {
+		const currentPhaseIdx = PHASE_ORDER.findIndex(turnPhase);
+		if(currentPhaseIdx < 0)
+			turnPhase = "placeArmies";
+		else
+			turnPhase = PHASE_ORDER[(currentPhaseIdx + 1) % PHASE_ORDER.length];
+		return;
+	}
+	// Before state is "playing", transition state
+	const gameStateOrder = ["startup", "ready", "initialPlacement", "playing"];
+	const currentGameStateIdx = gameStateOrder.findIndex(gameState);
+	if(0 < currentGameStateIdx < 3) { // Only change the state when it is valid and is not "playing"
+		gameState = gameStateOrder[currentGameStateIdx + 1];
+	}
+	else {
+		console.warn("transitionGameState was called, but the game state didn't change.");
+	}
 }
 
 /**
@@ -227,7 +253,7 @@ function placeArmy(player=currentPlayer, country=null) {
 	armiesLeftToPlace[currentPlayer] -= 1;
 	placeAnotherArmy();
 	if(!thereAreArmiesLeftToPlace) {
-		mode = "playing";
+		gameState = "playing";
 		mainGameLoop();
 	}
 }
@@ -288,19 +314,19 @@ function drawArmiesForCountry(country) {
 }
 
 /**
- * Place another army. If mode is "initialPlacement", then the next player places. Otherwise, the
+ * Place another army. If gameState is "initialPlacement", then the next player places. Otherwise, the
  * current player places.
  */
 function placeAnotherArmy() {
-	if(!["placingArmies", "initialPlacement"].includes(mode)) {
+	if(!["placingArmies", "initialPlacement"].includes(gameState)) {
 		console.error("placeAnotherArmy() was called outside of an army placement state");
 		return;
 	}
 	if(!thereAreArmiesLeftToPlace()) {
-		mode = "playing";
+		gameState = "playing";
 		return;
 	}
-	if(mode == "initialPlacement")
+	if(gameState == "initialPlacement")
 		getNextPlayer();
 	if(armiesLeftToPlace[currentPlayer] && (isPlayerNPC() || (randomArmyPlacement && someCountriesAreUnclaimed))) {
 		placeArmy();
@@ -381,13 +407,13 @@ function handleScreenClick(event) {
 	// Register click location
 	let pointerPos = getPointerPositionOnCanvas(htmlCanvasElement, event);
 	// Call a function based on game state, and pass the click location
-	if(mode == "countryCapture") {
+	if(gameState == "countryCapture") {
 		captureCountryLocations(pointerPos);
 	}
 	else if(isPlayerNPC()) { // We don't usually do anyting when it's not a human's turn
 		return;
 	}
-	else if(["placingArmies", "initialPlacement"].includes(mode)) {
+	else if(["placingArmies", "initialPlacement"].includes(gameState)) {
 		let country = countryClick(pointerPos);
 		placeArmy(currentPlayer, country);
 	}
@@ -423,7 +449,7 @@ function captureCountryLocations(pointerPos) {
 		downloadElement.download = "country_locations.json";
 		downloadElement.click();
 		// Stop capture mode
-		mode = "ready";
+		gameState = "ready";
 	}
 	else {
 		let countryItem = pointerPos;
@@ -433,7 +459,7 @@ function captureCountryLocations(pointerPos) {
 }
 
 /**
- * Adapt functionality based on game state (we mostly care about the mode).
+ * Adapt functionality based on game state.
  */
 function countryClick(pointerPos) {
 	let closestCountry = null;
