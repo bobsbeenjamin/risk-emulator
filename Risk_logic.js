@@ -119,8 +119,9 @@ function startGame() {
 		if(!startNewGame)
 			return;
 	}
-	// Read settings
+	// Read settings and redraw the map
 	readSettings();
+	drawMap(true);
 	// Prepare for the first turn
 	initializeCountries();
 	initializePlayerColors();
@@ -396,7 +397,11 @@ function updateBoard() {
 /**
  * Draw the map image in the game board canvas.
  */
-function drawMap() {
+function drawMap(clearMapFirst=false) {
+	if(clearMapFirst) {
+		drawSpace.fillStyle = "white";
+		drawSpace.fillRect(0, 0, htmlCanvasElement.width, htmlCanvasElement.height);
+	}
 	drawSpace.drawImage(mapImage, 0, 0, htmlCanvasElement.width, htmlCanvasElement.height);
 }
 
