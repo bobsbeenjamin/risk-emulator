@@ -2,7 +2,6 @@
 TODO:
 	Gameplay:
 		Placing armies:
-			Refactor getRandomCountry() to filter on valid countries
 			Turn-based placement:
 				Calculate number of armies for reinforcement phase
 			Card reimbursements:
@@ -54,6 +53,7 @@ DONE:
 			Initial placement:
 				Wait for the human player to place an army before the AI places their next army
 				Add logic for option to claim contries manually (random placement already works)
+			Refactor getRandomCountry() to filter on valid countries
 	Settings:
 		Move mute to settings
 	

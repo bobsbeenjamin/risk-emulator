@@ -11,7 +11,7 @@ const NUMBER_OF_COUNTRIES = 42; // The total number of countries on the map
 var armiesLeftToPlace = []; // Number of armies each player needs to place; used during reinforcment and initial placement
 var boardDim = 100 + 10; // leave a padding of 5 on each side of the visible board
 var currentPlayer = 0; // The player whose turn it is
-var countryMap = {}; // Only used when in country location capture mode
+var countryList = []; // Only used when in country location capture mode
 var drawSpace = null; // Holds the HTML canvas context
 var diceRoller = {}; // Object with data and UI elements for the dice roller modal
 var htmlCanvasElement = null; // Holds the HTML canvas element (useful for sizing)
@@ -123,7 +123,7 @@ function startGame() {
 	initializeCountries();
 	initializePlayerColors();
 	// Decide who goes first
-	firstPlayer = rollDice("Decide who goes first", "goes first");
+	firstPlayer = rollDice("Decide who goes first", "goes first", true);
 	if(firstPlayer == 1)  // TODO: Make this more dynamic for more than 2 players
 		playerOrder = [1, 2];
 	else
@@ -139,9 +139,9 @@ function startGame() {
  * Set all countries to 0 armies and no controller.
  */
 function initializeCountries() {
-	for(country in countries) {
-		countries[country].numArmies = 0;
-		countries[country].controller = 0;
+	for(let country of countries) {
+		country.numArmies = 0;
+		country.controller = 0;
 	}
 	someCountriesAreUnclaimed = true;
 	numCountriesWithArmies = 0;
@@ -199,10 +199,7 @@ function placeArmy(player=currentPlayer, country=null) {
 	
 	// For NPC, place an army. For the active player, this function is called from handleScreenClick.
 	if(isPlayerNPC() || !country) {
-		country = getRandomCountry();
-		while(someCountriesAreUnclaimed && country.numArmies > 0) {
-			country = getRandomCountry();
-		}
+		country = getRandomCountry(player);
 	}
 	else if(someCountriesAreUnclaimed && country.numArmies > 0) {
 		alert("Choose a country with no armies until the world is full.");
@@ -241,20 +238,34 @@ function placeArmy(player=currentPlayer, country=null) {
  */
 function getCountry(country) {
 	if(typeof country == "string") {
-		country = countries[country];
+		country = countries.filter(function(country_) {
+			return country_.name = country;
+		})[0];
 	}
 	return country;
 }
 
 /**
- * @returns A random country.
+ * @returns A random country. If someCountriesAreUnclaimed, make sure to select an unclaimed country.
+ * Otherwise if player is passed, filter on that player.
  * Credit: https://stackoverflow.com/a/15106541/2221645
  */
-function getRandomCountry() {
-	let countryIdx = getRandomInt(0, 41); // Get a random country index
-	let keys = Object.keys(countries); // Get the country names
-	let country = countries[keys[countryIdx]]; // Get a random country
-	//let country = countries[keys[ keys.length * Math.random() << 0 ]]; // Get a random country
+function getRandomCountry(player=0) {
+	validCountries = countries;
+	if(someCountriesAreUnclaimed) {
+		validCountries = validCountries.filter(function(country) {
+			return !country.controller;
+		});
+	}
+	else if(player) {
+		validCountries = validCountries.filter(function(country) {
+			return country.controller == player;
+		});
+	}
+	// let keys = Object.keys(validCountries); // Get the country names
+	let countryIdx = getRandomInt(0, validCountries.length - 1); // Get a random country index
+	let country = validCountries[countryIdx]; // Get a random country
+	//let country = validCountries[keys[ keys.length * Math.random() << 0 ]]; // Get a random country
 	if(!country.hasOwnProperty("numArmies"))
 		country.numArmies = 0;
 	return country;
@@ -404,7 +415,7 @@ function captureCountryLocations(pointerPos) {
 	let country = prompt("Enter country to assign this click location: ");
 	if(country == "done") {
 		// Make a "pretty" json string
-		let jsonData = JSON.stringify(countryMap, null, 2);
+		let jsonData = JSON.stringify(countryList, null, 2);
 		// Save the file locally
 		let downloadElement = document.createElement("a");
 		let file = new Blob([jsonData], {type: 'text/plain'});
@@ -415,9 +426,9 @@ function captureCountryLocations(pointerPos) {
 		mode = "ready";
 	}
 	else {
-		//countryData = pointerPos;
-		//countryData["index"] = 
-		countryMap[country] = pointerPos;
+		let countryItem = pointerPos;
+		countryItem["name"] = country;
+		countryList.push(countryItem);
 	}
 }
 
@@ -428,34 +439,36 @@ function countryClick(pointerPos) {
 	let closestCountry = null;
 	let closestDistance = 999999;
 	// countries is loaded in country_locations.js
-	for(let country in countries) {
+	for(let country of countries) {
 		// Simple distance formula; it's not too expensive, because there are less than 50 countries
 		let howClose = Math.sqrt(
-			Math.abs(countries[country].x - pointerPos.x)
-			+ Math.abs(countries[country].y - pointerPos.y)
+			Math.abs(country.x - pointerPos.x)
+			+ Math.abs(country.y - pointerPos.y)
 		);
 		if(howClose < closestDistance) {
 			closestDistance = howClose;
 			closestCountry = country;
 		}
 	}
-	//alert(closestCountry);  // Uncomment to debug
+	//alert(closestCountry.name);  // Uncomment to debug
 	return closestCountry;
 }
 
 /**
  * Roll the dice. This updates the UI.
  */
-function rollDice(modalTitle, resultsSuffix) {
+function rollDice(modalTitle, resultsSuffix, breakTies=false) {
 	loadSong("battleMusic1");
 	diceRoller.title.innerText = modalTitle;
 	diceRoller.results.innerText = "";
 	diceRoller["parent"].modal("show");
 	let die1 = die2 = 0;
 	// Break ties
-	while(die1 == die2) {
-		die1 = getDieRoll();
-		die2 = getDieRoll();
+	if(breakTies) {
+		while(die1 == die2) {
+			die1 = getDieRoll();
+			die2 = getDieRoll();
+		}
 	}
 	paintDieRoll("die-1", die1);
 	paintDieRoll("die-2", die2);
