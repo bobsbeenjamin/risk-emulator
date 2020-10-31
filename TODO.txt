@@ -2,8 +2,7 @@
 TODO:
 	Gameplay:
 		Placing armies:
-			Initial placement:
-				Add logic for option to claim contries manually (random placement already works)
+			Refactor getRandomCountry() to filter on valid countries
 			Turn-based placement:
 				Calculate number of armies for reinforcement phase
 			Card reimbursements:
@@ -46,6 +45,7 @@ TODO:
 		Refactor playerOrder, playerColors, etc to all be in a players array or object?
 		When clicking off a modal to close it, behave as though a close button was pressed
 	Bugs:
+		Sometimes the AI picks my contry while placing armies
 		Make "Would you like to start a new game?" work when changing new game settings
 	
 DONE:
@@ -53,6 +53,7 @@ DONE:
 		Placing armies:
 			Initial placement:
 				Wait for the human player to place an army before the AI places their next army
+				Add logic for option to claim contries manually (random placement already works)
 	Settings:
 		Move mute to settings
 	
