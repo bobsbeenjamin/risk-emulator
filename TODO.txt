@@ -44,10 +44,11 @@ TODO:
 		Refactor playerOrder, playerColors, etc to all be in a players array or object?
 		When clicking off a modal to close it, behave as though a close button was pressed
 	Bugs:
-		Sometimes the AI picks my contry while placing armies
 		Make "Would you like to start a new game?" work when changing new game settings
 	
 DONE:
+	Bugs:
+		Sometimes the AI picks my contry while placing armies
 	Gameplay:
 		Placing armies:
 			Initial placement:
