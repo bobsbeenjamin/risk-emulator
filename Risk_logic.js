@@ -33,9 +33,13 @@ var turnPhase = ""; // The current phase for the current turn
 var waitingForUserAction = false; // Used for async hack (change later dude)
 
 /**
- * Initializes the global vars. Run this only once per game.
+ * Initializes the global vars. Does lots of other initial setup. Run this only once per game with
+ * onLoad set to true.
  */
 function setUpGameBoard(onLoad=false) {
+	// Parse URL params
+	parseUrlParams();
+
 	if(onLoad) {
 		// Read settings and set up settings responsiveness
 		readSettings();
@@ -44,49 +48,21 @@ function setUpGameBoard(onLoad=false) {
 		});
 		
 		// Get audio ready
-		try {
-			let audio = new Audio("music/SecretofMana_IntoTheThickOfItAcapella_SmoothMcGroove.mp3");
-			musicList.backgroundMusic1 = audio;
-			audio = new Audio("music/AvengersSuite_Theme.mp3");
-			musicList.battleMusic1 = audio;
-			audio = new Audio("music/SuperSmashBrosBrawlOpeningTheme.mp3");
-			musicList.mainMenu1 = audio;
-		}
-		catch (e) {
-			// Do nothing
-		}
+		initializeAudio();
 		
 		// Set up the dice roller
-		diceRoller["parent"] = $("#diceRoller");
-		diceRoller["title"] = document.getElementById("dice-roller-title");
-		diceRoller["body"] = document.getElementById("dice-roller-body");
-		diceRoller["results"] = document.getElementById("dice-roller-results");
-		diceRoller["die-1"] = document.getElementById("dice-roller-die-1");
-		diceRoller["die-2"] = document.getElementById("dice-roller-die-2");
-		diceRoller["die-3"] = document.getElementById("dice-roller-die-3");
-		diceRoller["die-4"] = document.getElementById("dice-roller-die-4");
-		diceRoller["die-5"] = document.getElementById("dice-roller-die-5");
-		diceRoller["die-6"] = document.getElementById("dice-roller-die-6");
-		diceRoller["player-info"] = document.getElementById("dice-roller-player-info");
-		diceRoller["roll-again"] = document.getElementById("dice-roller-roll-again");
+		initializeDiceRoller();
 		
 		// Set up the canvas
-		htmlCanvasElement = document.getElementById("board");
-		drawSpace = htmlCanvasElement.getContext("2d");
-		drawSpace.font = "14px Arial";
-		htmlCanvasElement.addEventListener("click", handleScreenClick);
-		
-		// Parse URL params
-		parseUrlParams();
-		
-		// Prep the map image
-		mapImage = new Image();
-		mapImage.onload = drawMap;
-		mapImage.src = "images/map_small.png";
-		
-		// Draw the map
-		drawMap();
+		initializeCanvas();
 	}
+	// Prep the map image
+	mapImage = new Image();
+	mapImage.onload = drawMap;
+	mapImage.src = "images/map_small.png";
+
+	// Draw the map
+	drawMap();
 }
 
 /**
@@ -96,6 +72,51 @@ function readSettings() {
 	isMuted = ($("#settings-muted").is(":checked"));
 	numPlayers = parseInt(document.getElementById("settings-num-players").value);
 	randomArmyPlacement = ($("#settings-choose-countries-randomly").is(":checked"));
+}
+
+/**
+ * Load sound tracks into the global musicList object.
+ */
+function initializeAudio() {
+	try {
+		let audio = new Audio("music/SecretofMana_IntoTheThickOfItAcapella_SmoothMcGroove.mp3");
+		musicList.backgroundMusic1 = audio;
+		audio = new Audio("music/AvengersSuite_Theme.mp3");
+		musicList.battleMusic1 = audio;
+		audio = new Audio("music/SuperSmashBrosBrawlOpeningTheme.mp3");
+		musicList.mainMenu1 = audio;
+	}
+	catch (e) {
+		// Do nothing
+	}
+}
+
+/**
+ * Bind dice roller UI elements to the global diceRoller object.
+ */
+function initializeDiceRoller() {
+	diceRoller["parent"] = $("#diceRoller");
+	diceRoller["title"] = document.getElementById("dice-roller-title");
+	diceRoller["body"] = document.getElementById("dice-roller-body");
+	diceRoller["results"] = document.getElementById("dice-roller-results");
+	diceRoller["die-1"] = document.getElementById("dice-roller-die-1");
+	diceRoller["die-2"] = document.getElementById("dice-roller-die-2");
+	diceRoller["die-3"] = document.getElementById("dice-roller-die-3");
+	diceRoller["die-4"] = document.getElementById("dice-roller-die-4");
+	diceRoller["die-5"] = document.getElementById("dice-roller-die-5");
+	diceRoller["die-6"] = document.getElementById("dice-roller-die-6");
+	diceRoller["player-info"] = document.getElementById("dice-roller-player-info");
+	diceRoller["roll-again"] = document.getElementById("dice-roller-roll-again");
+}
+
+/**
+ * Bind some global vars to the canvase element and context. Add onclick and default font.
+ */
+function initializeCanvas() {
+	htmlCanvasElement = document.getElementById("board");
+	drawSpace = htmlCanvasElement.getContext("2d");
+	drawSpace.font = "14px Arial";
+	htmlCanvasElement.addEventListener("click", handleScreenClick);
 }
 
 /**
