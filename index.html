@@ -25,32 +25,36 @@
   <br/>
   <p id="textDisplayArea">Click a button below, or click the screen to start</p>
   <button onclick="startGame()">Start Game</button>
-  <button type="button" onclick="loadSong();" data-toggle="modal" data-target="#settingsMenu">Settings</button>
+  <button type="button" onclick="openModal('settings');" data-toggle="modal" data-target="#settingsMenu">
+    Settings
+  </button>
   
   <!-- Settings Menu -->
   <div id="settingsMenu" class="modal fade" role="dialog">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <button type="button" onclick="saveSettings();" class="close" data-dismiss="modal">&times;</button>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
           <h4 class="modal-title">Settings</h4>
         </div>
         <div class="modal-body">
           <form id="settings-form">
-			<h4>Generic Settings</h4>
-			<label for="settings-muted">Mute: </label>
-			<input type="checkbox" id="settings-muted" name="settings-muted" onclick="muteHandler();">
-			<hr/>
-			
-			<h4>Settings for Starting a New Game</h4>
-			<label for="settings-num-players">Number of Players: </label>
-			<input type="number" id="settings-num-players" name="settings-num-players" class="new-game-setting" min=2 max=6 value=2>
-			<label for="settings-choose-countries-randomly">Choose Countries Randomly: </label>
-			<input type="checkbox" id="settings-choose-countries-randomly" name="settings-choose-countries-randomly" class="new-game-setting" checked>
+            <h4>Generic Settings</h4>
+            <label for="settings-muted">Mute: </label>
+            <input type="checkbox" id="settings-muted" name="settings-muted" onclick="muteHandler();">
+            <hr/>
+            
+            <h4>Settings for Starting a New Game</h4>
+            <label for="settings-num-players">Number of Players: </label>
+            <input type="number" id="settings-num-players" name="settings-num-players" class="new-game-setting"
+              min=2 max=6 value=2>
+            <label for="settings-choose-countries-randomly">Choose Countries Randomly: </label>
+            <input type="checkbox" id="settings-choose-countries-randomly" class="new-game-setting"
+              name="settings-choose-countries-randomly" checked>
           </form>
         </div>
         <div class="modal-footer">
-          <button type="button" onclick="saveSettings();" class="btn btn-default" data-dismiss="modal">Save</button>
+          <button type="button" class="btn btn-default" data-dismiss="modal">Save</button>
         </div>
       </div>
     </div>
@@ -61,7 +65,7 @@
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <button type="button" onclick="closeModal();" class="close" data-dismiss="modal">&times;</button>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
           <h4 id="dice-roller-title" class="modal-title"></h4>
         </div>
         <div id="dice-roller-body" class="modal-body">
@@ -77,8 +81,9 @@
 		  <span id="dice-roller-player-info"></span>
         </div>
         <div class="modal-footer">
-          <button id="dice-roller-roll-again" type="button" onclick="rollAgain();" class="btn btn-default" hidden="true">Roll again</button>
-          <button type="button" onclick="closeModal();" class="btn btn-default" data-dismiss="modal">Close</button>
+          <button id="dice-roller-roll-again" type="button" onclick="rollAgain();" class="btn btn-default"
+            hidden="true">Roll again</button>
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
         </div>
       </div>
     </div>

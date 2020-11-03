@@ -30,7 +30,6 @@ TODO:
 	Sounds:
 		Music:
 			Load intro music at game load
-			Add main screen music
 			Support music themes
 			Scrape and upload different songs
 			Add different types of music to different parts of the game
@@ -41,7 +40,6 @@ TODO:
 	Misc:
 		Rename playerOrder to turnOrder?
 		Refactor playerOrder, playerColors, etc to all be in a players array or object?
-		When clicking off a modal to close it, behave as though a close button was pressed
 	Bugs:
 		The first army is placed for me when I go first and I am using manual placement
 		Make "Would you like to start a new game?" work when changing new game settings
@@ -59,4 +57,9 @@ DONE:
 		Allow for more than 2 players
 	Settings:
 		Move mute to settings
+	Sounds:
+		Music:
+			Add main screen music
+	Misc:
+		When clicking off a modal to close it, behave as though a close button was pressed
 	

@@ -46,6 +46,14 @@ function setUpGameBoard(onLoad=false) {
 		$("#new-game-settings").change(function() {
 			$("#settings-form").data("changed", true);
 		});
+
+		// Set up modal close functions
+		$("#settingsMenu").on("hidden.bs.modal", function () {
+			closeModal("settings");
+		});
+		$("#diceRoller").on("hidden.bs.modal", function () {
+			closeModal("diceRoller");
+		});
 		
 		// Get audio ready
 		initializeAudio();
@@ -63,6 +71,20 @@ function setUpGameBoard(onLoad=false) {
 
 	// Draw the map
 	drawMap();
+}
+
+/**
+ * If the hidden doCaptureCountryLocations param is passed in the URL, then enter country location
+ * capture mode.
+ */
+function parseUrlParams() {
+ let url_string = window.location.href;
+ let url = new URL(url_string);
+ let doCaptureCountryLocations = url.searchParams.get("doCaptureCountryLocations") || null;
+ if(doCaptureCountryLocations) {
+	 alert("Entering country location capture mode");
+	 gameState = "countryCapture";
+ }
 }
 
 /**
@@ -117,20 +139,6 @@ function initializeCanvas() {
 	drawSpace = htmlCanvasElement.getContext("2d");
 	drawSpace.font = "14px Arial";
 	htmlCanvasElement.addEventListener("click", handleScreenClick);
-}
-
-/**
- * If the hidden doCaptureCountryLocations param is passed in the URL, then enter country location
-   capture mode.
- */
-function parseUrlParams() {
-	let url_string = window.location.href;
-	let url = new URL(url_string);
-	let doCaptureCountryLocations = url.searchParams.get("doCaptureCountryLocations") || null;
-	if(doCaptureCountryLocations) {
-		alert("Entering country location capture mode");
-		gameState = "countryCapture";
-	}
 }
 
 /**
@@ -402,18 +410,37 @@ function loadSong(songStr="mainMenu1") {
 function saveSettings() {
 	if($("#settings-form").data("changed")) {
 		if(confirm("Would you like to start a new game?")) {
-			setUpGameBoard(true);
+			setUpGameBoard();
 		}
 		$("#settings-form").data("changed", false);
 	}
-	closeModal();
 }
 
 /**
- * Pause the music.
+ * Switch from background music to an appropriate song based on the modal opened.
  */
-function closeModal() {
+function openModal(whichModal=null, modalElement=null) {
+	song?.pause();
+	if(whichModal == "settings") {
+		loadSong("mainMenu1");
+	}
+	else if(whichModal == "diceRoller") {
+		loadSong("battleMusic1");
+	}
+	if(modalElement) {
+		modalElement.modal("show");
+	}
+}
+
+/**
+ * Switch to background music. Possibly call other functions, depending on whichModal.
+ */
+function closeModal(whichModal=null) {
 	song.pause();
+	loadSong("backgroundMusic1");
+	if(whichModal == "settings") {
+		saveSettings();
+	}
 }
 
 /**
@@ -525,7 +552,6 @@ function countryClick(pointerPos) {
  */
 function rollDice(modalTitle, resultsSuffix, breakTies=false, numPlayers=2) {
 	// Some UI stuff
-	loadSong("battleMusic1");
 	diceRoller.title.innerText = modalTitle;
 	diceRoller.results.innerText = "";
 	// Initial roll
@@ -545,12 +571,11 @@ function rollDice(modalTitle, resultsSuffix, breakTies=false, numPlayers=2) {
 			}
 		}
 	}
-	// Some more UI stuff
-	paintDiceRolls(diceArray);
-	diceRoller["parent"].modal("show");
 	// Determine winner
 	let winner = diceArray.indexOf(Math.max(...diceArray)) + 1; // Add 1 because players are 1-based
-	// Final UI stuff, and return winner
+	// More UI stuff, and return winner
+	paintDiceRolls(diceArray);
+	openModal("diceRoller", diceRoller["parent"]);
 	diceRoller.results.innerText = "Player " + winner + " " + resultsSuffix;
 	diceRoller["player-info"].innerText = getPlayerColorsString();
 	return winner;
