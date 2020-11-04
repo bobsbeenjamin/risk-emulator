@@ -41,6 +41,7 @@ TODO:
 		Rename playerOrder to turnOrder?
 		Refactor playerOrder, playerColors, etc to all be in a players array or object?
 	Bugs:
+		Fix formatting on t-rex-runner mini-game when called using param (or remove param support)
 		The first army is placed for me when I go first and I am using manual placement
 		Make "Would you like to start a new game?" work when changing new game settings
 	
@@ -62,4 +63,5 @@ DONE:
 			Add main screen music
 	Misc:
 		When clicking off a modal to close it, behave as though a close button was pressed
+		Add t-rex-runner mini-game easter egg
 	

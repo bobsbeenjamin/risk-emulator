@@ -75,16 +75,25 @@ function setUpGameBoard(onLoad=false) {
 
 /**
  * If the hidden doCaptureCountryLocations param is passed in the URL, then enter country location
- * capture mode.
+ * capture mode. If the the hidden t-rex-runner param is passed in the URL, then load the t-rex-
+ * runner mini game.
  */
 function parseUrlParams() {
- let url_string = window.location.href;
- let url = new URL(url_string);
- let doCaptureCountryLocations = url.searchParams.get("doCaptureCountryLocations") || null;
- if(doCaptureCountryLocations) {
-	 alert("Entering country location capture mode");
-	 gameState = "countryCapture";
- }
+	const url_string = window.location.href;
+	const url = new URL(url_string);
+	// Capture country locations mode
+	let hiddenParam = url.searchParams.get("doCaptureCountryLocations") || null;
+	if(hiddenParam) {
+		alert("Entering country location capture mode");
+		gameState = "countryCapture";
+		return;
+	}
+	// t-rex-runner mini-game
+	hiddenParam = url.searchParams.get("t-rex-runner") || null;
+	if(hiddenParam) {
+		loadTrexRunner();
+		return;
+	}
 }
 
 /**
@@ -656,4 +665,17 @@ function muteHandler() {
 		song.muted = false;
 		song.play();
 	}
+}
+
+/**
+ * Load the t-rex-runner mini-game.
+ */
+function loadTrexRunner() {  // FIXME: This works, but it has an annoying scroll bar that refuses to go away
+	let iframe = document.createElement("iframe");
+	iframe.src = "t-rex-runner/index.html";
+	iframe.height = "400px";
+	iframe.width = "1000px";
+	document.body.appendChild(document.createElement("br"));
+	document.body.appendChild(iframe);
+	iframe.scrollIntoView(false);
 }
