@@ -20,9 +20,9 @@ var htmlCanvasElement = null; // Holds the HTML canvas element (useful for sizin
 var someCountriesAreUnclaimed = true; // Are we still filling the board?
 var isMuted = false; // Is the background music muted?
 var mapImage = null; // The map image that we draw on
-var gameState = "startup"; // Gamestate mode: "playing" means a game is in progress
+var gameState = "setup"; // Gamestate mode: "playing" means a game is in progress
 var musicList = {}; // Holds Audio objects to load and play music
-var numCountriesWithArmies = 0; // How many countries have armies on them; only used during startup
+var numCountriesWithArmies = 0; // How many countries have armies on them; only used during setup
 var numPlayers = 2; // The number of players in the game
 var playerColors = []; // The colors for each player
 var playerOrder = []; // Determined at game start; the order of play
@@ -38,12 +38,12 @@ var waitingForUserAction = false; // Used for async hack (change later dude)
  * onLoad set to true.
  */
 function setUpGameBoard(onLoad=false) {
-	// Parse URL params
+	// Parse URL params and read settings
 	parseUrlParams();
+	readSettings();
 
 	if(onLoad) {
-		// Read settings and set up settings responsiveness
-		readSettings();
+		// Set up settings responsiveness FIXME
 		$("#new-game-settings").change(function() {
 			$("#settings-form").data("changed", true);
 		});
@@ -70,7 +70,7 @@ function setUpGameBoard(onLoad=false) {
 	mapImage.onload = drawMap;
 	mapImage.src = "images/map_small.png";
 
-	// Draw the map
+	resetGlobalsForNewGame();
 	drawMap();
 }
 
@@ -149,6 +149,22 @@ function initializeCanvas() {
 	drawSpace = htmlCanvasElement.getContext("2d");
 	drawSpace.font = "14px Arial";
 	htmlCanvasElement.addEventListener("click", handleScreenClick);
+}
+
+/**
+ * Set appropriate global vars to their defaults.
+ */
+function resetGlobalsForNewGame() {
+	armiesLeftToPlace = []; // Number of armies each player needs to place; used during reinforcment and initial placement
+	currentPlayer = 0; // The player whose turn it is
+	someCountriesAreUnclaimed = true; // Are we still filling the board?
+	gameState = "setup"; // Gamestate mode: "playing" means a game is in progress
+	numCountriesWithArmies = 0; // How many countries have armies on them; only used during setup
+	playerColors = []; // The colors for each player
+	playerOrder = []; // Determined at game start; the order of play
+	roundCounter = 0; // Which round we're on; a round is complete once each player takes a turn
+	turnCounter = 0; // Which turn we're on; each player gets one turn per round
+	turnPhase = ""; // The current phase for the current turn
 }
 
 /**
@@ -274,7 +290,7 @@ function transitionGameState(actOnTransition=false) {
 	}
 	// Before the state is "playing", transition state
 	else {
-		const gameStateOrder = ["startup", "ready", "initialPlacement", "playing"];
+		const gameStateOrder = ["setup", "ready", "initialPlacement", "playing"];
 		const currentGameStateIdx = gameStateOrder.indexOf(gameState);
 		if(0 < currentGameStateIdx < 3) { // Only change the state when it is valid and is not "playing"
 			gameState = gameStateOrder[currentGameStateIdx + 1];
