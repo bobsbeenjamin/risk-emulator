@@ -23,9 +23,10 @@ TODO:
 		Support remote human players (playing over the net)
 	Settings:
 		Choose player colors
-		When selecting number of players, give up and down buttons
+		When selecting number of players, give up and down buttons for mobile
 		Set music themes
 		Choose skins
+		AI speed (ie, pause time between moves)
 		AI difficulty
 	Sounds:
 		Music:

@@ -7,7 +7,8 @@ See https://github.com/bobsbeenjamin/risk-emulator for license and disclaimers
 /// Globals ///
 const ACTIVE_PLAYER_NUM = 1; // Indicates which player is the person playing the game
 const NUMBER_OF_COUNTRIES = 42; // The total number of countries on the map
-const PHASE_ORDER = ["placeArmies", "attack", "nonCombat", "end"]; // The phases of a turn
+const PHASE_ORDER = ["reinforcement", "attack", "nonCombat", "end"]; // The phases of a turn
+const delay = ms => new Promise(res => setTimeout(res, ms)); // A handy delay function
 
 var armiesLeftToPlace = []; // Number of armies each player needs to place; used during reinforcment and initial placement
 var boardDim = 100 + 10; // leave a padding of 5 on each side of the visible board
@@ -156,7 +157,7 @@ function initializeCanvas() {
  */
 function startGame() {
 	// Give the player an option to abort while a game is going
-	if(["initialPlacement", "placingArmies", "playing"].includes(gameState)) {
+	if(["initialPlacement", "playing"].includes(gameState)) {
 		startNewGame = confirm("Do you want to abandon this game and start a new game?");
 		if(!startNewGame)
 			return;
@@ -230,7 +231,7 @@ function firstPlacementOfArmies() {
 }
 
 /**
- * Keep playing the game until there is a winner. (this is recursive)
+ * Keep playing the game until there is a winner. (this is recursive) (this is currently unused)
  */
 function mainGameLoop(round=1) {
 	roundCounter = round;
@@ -244,26 +245,62 @@ function mainGameLoop(round=1) {
 
 /**
  * Transition game state (turnPhase and gameState) based on current state.
+ * @param actOnTransition: If true, then call the appropriate function based on game state.
  */
-function transitionGameState() {
-	// When state is "playing", transition turn phase
+function transitionGameState(actOnTransition=false) {
+	// When the state is "playing", transition turn phase
 	if(gameState == "playing") {
-		const currentPhaseIdx = PHASE_ORDER.findIndex(turnPhase);
+		const currentPhaseIdx = PHASE_ORDER.indexOf(turnPhase);
 		if(currentPhaseIdx < 0)
-			turnPhase = "placeArmies";
+			turnPhase = "reinforcement";
 		else
 			turnPhase = PHASE_ORDER[(currentPhaseIdx + 1) % PHASE_ORDER.length];
-		return;
+		if(actOnTransition) {
+			switch(turnPhase) {
+				case "reinforcement":
+					placeArmy();
+					break;
+				case "attack":
+					startAttackPhase();
+					break;
+				case "nonCombat":
+					startNonCombatPhase();
+					break;
+				case "end":
+					nextTurn();
+					break;
+			}
+		}
 	}
-	// Before state is "playing", transition state
-	const gameStateOrder = ["startup", "ready", "initialPlacement", "playing"];
-	const currentGameStateIdx = gameStateOrder.findIndex(gameState);
-	if(0 < currentGameStateIdx < 3) { // Only change the state when it is valid and is not "playing"
-		gameState = gameStateOrder[currentGameStateIdx + 1];
-	}
+	// Before the state is "playing", transition state
 	else {
-		console.warn("transitionGameState was called, but the game state didn't change.");
+		const gameStateOrder = ["startup", "ready", "initialPlacement", "playing"];
+		const currentGameStateIdx = gameStateOrder.indexOf(gameState);
+		if(0 < currentGameStateIdx < 3) { // Only change the state when it is valid and is not "playing"
+			gameState = gameStateOrder[currentGameStateIdx + 1];
+		}
+		else {
+			console.warn("transitionGameState was called, but the game state didn't change.");
+		}
+		if(actOnTransition) {
+			switch(gameState) {
+				case "initialPlacement":
+					placeArmy();
+					break;
+				case "playing":
+					beginFirstTurn();
+					break;
+			}
+		}
 	}
+}
+
+/**
+ * Begin the first turn, setting state and such.
+ */
+function beginFirstTurn() {
+	gameState = "playing";
+	transitionGameState(true);
 }
 
 /**
@@ -271,7 +308,7 @@ function transitionGameState() {
  * If someCountriesAreUnclaimed is true, then force placement on a country with no armies.
  */
 function placeArmy(player=currentPlayer, country=null) {
-	if(armiesLeftToPlace[currentPlayer] == 0) {
+	if(gameState == "initialPlacement" && armiesLeftToPlace[currentPlayer] == 0) {
 		console.warn("Someone tried to place an army when they have no armies left to place. Ignoring.");
 		return;
 	}
@@ -291,7 +328,7 @@ function placeArmy(player=currentPlayer, country=null) {
 	
 	// Place the army
 	country = getCountry(country);
-	country.controller = player;
+	country.controller = player;  // Because of the check above, this shouldn't hand control to another player
 	country.numArmies += 1;
 	drawArmiesForCountry(country);
 	
@@ -303,30 +340,134 @@ function placeArmy(player=currentPlayer, country=null) {
 	}
 	
 	// This will end up calling placeArmy if there are any armies left to place for the current player
-	armiesLeftToPlace[currentPlayer] -= 1;
+	decrementArmiesToPlace(currentPlayer);
 	placeAnotherArmy();  // Recursive call
-	startAttackPhase();
+	if(turnPhase == "reinforcment" && !thereAreArmiesLeftToPlace(player)) {
+		startAttackPhase();
+	}
 }
 
 /**
- * TODO: Add documentation
+ * Reduce the armies left to place counter by 1. (armiesLeftToPlace is an array during
+ * initialPlacement and an int during reinforcement)
+ * @returns true if the armies counter was decremented, false otherwise.
+ */
+function decrementArmiesToPlace(player=currentPlayer) {
+	if(!player || !thereAreArmiesLeftToPlace(player)) {
+		return false;
+	}
+	if(gameState == "initialPlacement") {
+		armiesLeftToPlace[player] --;
+		return true;
+	}
+	else if(turnPhase == "reinforcement") {
+		armiesLeftToPlace --;
+		return true;
+	}
+	else return false;
+}
+
+/**
+ * Set the turnPhase. If the player is an NPC, then make their attacks.
  */
 function startAttackPhase(player=currentPlayer) {
-	if(!thereAreAttacksLeft(player)) {
-		alert("There are no more legal attacks. The turn is over.");
-		nextTurn();
-	}
+	turnPhase = "attack";
 	
-	// TODO: Finish this function
+	if(isPlayerNPC()) {
+		handleAiAttacks(player);
+	}
+	else {
+		checkForLegalAttacks(player);
+	}
+}
+
+/**
+ * For now, make a bunch of random attacks, and always attack when a country is controlled that 
+ * borders enemy countries with less armies.
+ */
+function handleAiAttacks(player) {
+	if(!isPlayerNPC()) {
+		console.warn("handleAiAttacks got called during a player's move. Ignoring.");
+		return;
+	}
+
+	let nextAttack = getNextAiAttack(player);
+	if(!nextAttack) {
+		transitionGameState();
+	}
+	makeAttack(nextAttack);
+}
+
+/**
+ * Gets the next good attack for the AI player. For now, find a country controlled by the player
+ * that borders enemy countries with less armies.
+ */
+function getNextAiAttack(player) {
+	if(!isPlayerNPC()) {
+		console.warn("handleAiAttacks got called during a player's move. Ignoring.");
+		return null;
+	}
+	for(let country of thePlayersCountries(player)) {
+		for(let neighbor of country.neighboringCountries) {
+			neighbor = getCountry(neighbor);
+			if(country.numArmies > neighbor.numArmies && neighbor.controller != player)
+			return [country, neighbor];
+		}
+	}
+	return null;
+}
+
+/**
+ * Return whether there are legal attacks for player. If there are none left, alert the user and
+ * advance the turn.
+ * @param player: The player to check.
+ * @returns true if there are legal attacks for player, false otherwise.
+ */
+function checkForLegalAttacks(player) {
+	if(thereAreMovesLeft(player)) {
+		return true;
+	}
+	else {
+		alert("There are no more legal attacks. The turn is over.");
+		nextTurn(); // We can skip the nonCombat phase, because there are no viable non-combat moves
+		return false;
+	}
+}
+
+/**
+ * @param player: The player to filter on (defaults to currentPlayer).
+ * @returns An array of the countries controlled by the player.
+ */
+function thePlayersCountries(player=currentPlayer) {
+	return countries.filter( function(country) {
+		return country.controller == player;
+	});
+}
+
+/**
+ * Make a single attack. If nextAttack is passed, use it. Then roll the dice to attack.
+ * @param nextAttack: An array representing the next AI attack. Format: an array with 2 countries.
+ */
+async function makeAttack(nextAttack=null, player=currentPlayer) {
+	if(nextAttack) {
+		[attackingCountry, defendingCountry] = nextAttack;
+		// TODO: Replace the following logic with dice rolls
+		attackingCountry.numArmies --;
+		defendingCountry.numArmies --;
+		console.log(attackingCountry.name + " -> " + defendingCountry.name);
+		drawArmiesForCountry(attackingCountry);
+		drawArmiesForCountry(defendingCountry);
+	}
+	await delay(750); // Credit: https://stackoverflow.com/a/47480429/2221645
 }
 
 /**
  * @param player: The player to check.
  * @returns Whether the player has any countries with more than one army.
  */
-function thereAreAttacksLeft(player) {
-	for(contry of countries) {
-		if(countries.controller == player && country.numArmies > 0) {
+function thereAreMovesLeft(player) {  // TODO: Adapt this for non-combat vs attack checks
+	for(let country of countries) {
+		if(country.controller == player && country.numArmies > 0) {
 			return true;
 		}
 	}
@@ -338,6 +479,7 @@ function thereAreAttacksLeft(player) {
  */
 function nextTurn() {
 	getNextPlayer();
+	turnPhase = "reinforcement";
 	if(playerOrder.indexOf(currentPlayer) == 0) {
 		roundCounter ++;
 	}
@@ -403,19 +545,26 @@ function drawArmiesForCountry(country) {
  * current player places.
  */
 function placeAnotherArmy() {
-	if(!["placingArmies", "initialPlacement"].includes(gameState)) {
+	if(!weArePlacingArmies()) {
 		console.error("placeAnotherArmy() was called outside of an army placement state");
 		return;
 	}
-	if(!thereAreArmiesLeftToPlace()) {
-		gameState = "playing";
+	if(!thereAreArmiesLeftToPlace(currentPlayer)) {
+		transitionGameState(true);
 		return;
 	}
 	if(gameState == "initialPlacement")
 		getNextPlayer();
-	if(armiesLeftToPlace[currentPlayer] && (isPlayerNPC() || (randomArmyPlacement && someCountriesAreUnclaimed))) {
+	if(thereAreArmiesLeftToPlace(currentPlayer) && (isPlayerNPC() || (randomArmyPlacement && someCountriesAreUnclaimed))) {
 		placeArmy();
 	}
+}
+
+/**
+ * @returns true if the game is in an army placement state, false otherwise.
+ */
+function weArePlacingArmies() {
+	return (gameState === "initialPlacement" || turnPhase === "reinforcement");
 }
 
 /**
@@ -521,7 +670,7 @@ function handleScreenClick(event) {
 	else if(isPlayerNPC()) { // We don't usually do anyting when it's not a human's turn
 		return;
 	}
-	else if(["placingArmies", "initialPlacement"].includes(gameState)) {
+	else if(weArePlacingArmies()) {
 		let country = countryClick(pointerPos);
 		placeArmy(currentPlayer, country);
 	}
@@ -677,10 +826,24 @@ function isPlayerNPC(player=null) {
 }
 
 /**
- * @returns true if any element in armiesLeftToPlace is greater than 0, false otherwise.
+ * @returns true if there are armies left to place, false otherwise. This is determined by whether
+ * any element in armiesLeftToPlace is greater than 0 during initialPlacement, and whether 
+ * armiesLeftToPlace is greater than 0 during reinforcement.
  */
-function thereAreArmiesLeftToPlace() {
-	return armiesLeftToPlace.some(item => item > 0);
+function thereAreArmiesLeftToPlace(player=null) {
+	if(gameState == "initialPlacement") {
+		if(player)
+			return (armiesLeftToPlace[player] > 0);
+		else
+			return armiesLeftToPlace.some(item => item > 0);
+	}
+	else if(turnPhase == "reinforcement") {
+		return (armiesLeftToPlace > 0);
+	}
+	else {
+		console.error("thereAreArmiesLeftToPlace was called during a bad game state.");
+		return false;
+	}
 }
 
 /**
