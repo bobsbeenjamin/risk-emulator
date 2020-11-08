@@ -304,10 +304,42 @@ function placeArmy(player=currentPlayer, country=null) {
 	
 	// This will end up calling placeArmy if there are any armies left to place for the current player
 	armiesLeftToPlace[currentPlayer] -= 1;
-	placeAnotherArmy();
-	if(!thereAreArmiesLeftToPlace) {
-		gameState = "playing";
-		mainGameLoop();
+	placeAnotherArmy();  // Recursive call
+	startAttackPhase();
+}
+
+/**
+ * TODO: Add documentation
+ */
+function startAttackPhase(player=currentPlayer) {
+	if(!thereAreAttacksLeft(player)) {
+		alert("There are no more legal attacks. The turn is over.");
+		nextTurn();
+	}
+	
+	// TODO: Finish this function
+}
+
+/**
+ * @param player: The player to check.
+ * @returns Whether the player has any countries with more than one army.
+ */
+function thereAreAttacksLeft(player) {
+	for(contry of countries) {
+		if(countries.controller == player && country.numArmies > 0) {
+			return true;
+		}
+	}
+	return false;
+}
+
+/**
+ * Advance the turn, and possibly the round.
+ */
+function nextTurn() {
+	getNextPlayer();
+	if(playerOrder.indexOf(currentPlayer) == 0) {
+		roundCounter ++;
 	}
 }
 
