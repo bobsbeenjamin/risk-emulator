@@ -392,10 +392,11 @@ function handleAiAttacks(player) {
 	}
 
 	let nextAttack = getNextAiAttack(player);
-	if(!nextAttack) {
-		transitionGameState();
+	while(nextAttack) {
+		makeAttack(nextAttack);
+		nextAttack = getNextAiAttack(player);
 	}
-	makeAttack(nextAttack);
+	transitionGameState();
 }
 
 /**
