@@ -11,8 +11,9 @@ TODO:
 		Taking turns:
 			Get the turn taking loop working
 		Battles:
+			After a win, transfer armies from the attacking country to the defending country
 			Allow the human player to attack
-			Add better logic for AI to attack
+			Add better logic for AI attacks
 			When a player is eliminated, give their cards to the victor
 			Detect the final battle
 				Play special music
@@ -41,7 +42,7 @@ TODO:
 		Rename playerOrder to turnOrder?
 		Refactor playerOrder, playerColors, etc to all be in a players array or object?
 	Bugs:
-		Why are the countries showing the wrong name during AI attack?
+		Why are no attacks being made by AI
 		Fix formatting on t-rex-runner mini-game when called using param (or remove param support)
 		The first army is placed for me when I go first and I am using manual placement
 		Make "Would you like to start a new game?" work when changing new game settings
@@ -49,6 +50,7 @@ TODO:
 DONE:
 	Bugs:
 		Sometimes the AI picks my contry while placing armies
+		Why are the countries showing the wrong name during AI attack?
 	Gameplay:
 		Placing armies:
 			Initial placement:

@@ -509,7 +509,7 @@ function nextTurn() {
 function getCountry(country) {
 	if(typeof country == "string") {
 		country = countries.filter(function(country_) {
-			return country_.name = country;
+			return (country_.name == country);
 		})[0];
 	}
 	return country;
