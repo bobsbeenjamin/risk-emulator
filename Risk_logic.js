@@ -37,7 +37,7 @@ var waitingForUserAction = false; // Used for async hack (change later dude)
  * Initializes the global vars. Does lots of other initial setup. Run this only once per game with
  * onLoad set to true.
  */
-function setUpGameBoard(onLoad=false) {
+function setUpGameBoard(onLoad=false, redrawMap=false) {
 	// Parse URL params and read settings
 	parseUrlParams();
 	readSettings();
@@ -65,13 +65,16 @@ function setUpGameBoard(onLoad=false) {
 		// Set up the canvas
 		initializeCanvas();
 	}
+
 	// Prep the map image
-	mapImage = new Image();
-	mapImage.onload = drawMap;
-	mapImage.src = "images/map_small.png";
+	if(onLoad || redrawMap) {
+		mapImage = new Image();
+		mapImage.onload = drawMap;
+		mapImage.src = "images/map_small.png";
+	}
 
 	resetGlobalsForNewGame();
-	drawMap();
+	drawMap(true);
 }
 
 /**
@@ -179,8 +182,7 @@ function startGame() {
 			return;
 	}
 	// Read settings and redraw the map
-	readSettings();
-	drawMap(true);
+	setUpGameBoard();
 	// Prepare for the first turn
 	initializeCountries();
 	initializePlayerColors();
@@ -324,7 +326,7 @@ function beginFirstTurn() {
  * If someCountriesAreUnclaimed is true, then force placement on a country with no armies.
  */
 function placeArmy(player=currentPlayer, country=null) {
-	if(gameState == "initialPlacement" && armiesLeftToPlace[currentPlayer] == 0) {
+	if(!thereAreArmiesLeftToPlace(player)) {
 		console.warn("Someone tried to place an army when they have no armies left to place. Ignoring.");
 		return;
 	}
