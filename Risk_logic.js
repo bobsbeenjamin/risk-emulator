@@ -276,6 +276,7 @@ function transitionGameState(actOnTransition=false) {
 		if(actOnTransition) {
 			switch(turnPhase) {
 				case "reinforcement":
+					armiesLeftToPlace = 3;  // FIXME: Calculate this based on Risk rules
 					placeArmy();
 					break;
 				case "attack":
@@ -476,8 +477,32 @@ async function makeAttack(nextAttack=null, player=currentPlayer) {
 		console.log(attackingCountry.name + " -> " + defendingCountry.name);
 		drawArmiesForCountry(attackingCountry);
 		drawArmiesForCountry(defendingCountry);
+		
+		if(defendingCountry.numArmies <= 0) {
+			invadeCountry(attackingCountry, defendingCountry);
+		}
 	}
 	await delay(750); // Credit: https://stackoverflow.com/a/47480429/2221645
+}
+
+/**
+ * @param attackingCountry: The country that just won.
+ * @param defendingCountry: The country that just lost, and is about to be invaded.
+ * Transfer some armies from the attacking country to the defending country. If the attackingCountry
+ * was controlled by a human, then ask them how many armies to move.  TODO: Ask the human for number
+ */
+function invadeCountry(attackingCountry, defendingCountry) {
+	// Calculate the transfer
+	// TODO: Adapt this logic when AI gets smarter
+	let numArmiesToTransfer = Math.round(attackingCountry.numArmies / 2);
+	if(numArmiesToTransfer > attackingCountry.numArmies)
+		numArmiesToTransfer = attackingCountry.numArmies - 1;
+	// Make the transfer
+	attackingCountry.numArmies -= numArmiesToTransfer;
+	defendingCountry.numArmies = numArmiesToTransfer;
+	defendingCountry.controller = attackingCountry.controller;
+	drawArmiesForCountry(attackingCountry);
+	drawArmiesForCountry(defendingCountry);
 }
 
 /**

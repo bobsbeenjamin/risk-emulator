@@ -11,13 +11,16 @@ TODO:
 		Taking turns:
 			Get the turn taking loop working
 		Battles:
-			After a win, transfer armies from the attacking country to the defending country
 			Allow the human player to attack
-			Add better logic for AI attacks
 			When a player is eliminated, give their cards to the victor
 			Detect the final battle
 				Play special music
 				Tell the user that it's the final battle
+	AI:
+		Better calculation for number of armies to transfer after defeating a country
+		Better logic for AI attacks
+		AI speed (ie, pause time between moves)
+		AI difficulty
 	Players:
 		Support local human players (on the same device)
 		Support remote human players (playing over the net)
@@ -42,7 +45,7 @@ TODO:
 		Rename playerOrder to turnOrder?
 		Refactor playerOrder, playerColors, etc to all be in a players array or object?
 	Bugs:
-		Why are no attacks being made by AI
+		When attacking, sometimes the AI leaves its own countries with 0 armies
 		Fix formatting on t-rex-runner mini-game when called using param (or remove param support)
 		The first army is placed for me when I go first and I am using manual placement
 		Make "Would you like to start a new game?" work when changing new game settings
@@ -51,6 +54,7 @@ DONE:
 	Bugs:
 		Sometimes the AI picks my contry while placing armies
 		Why are the countries showing the wrong name during AI attack?
+		Why are no attacks being made by AI? (Global vars weren't being reset)
 	Gameplay:
 		Placing armies:
 			Initial placement:
@@ -59,6 +63,7 @@ DONE:
 			Refactor getRandomCountry() to filter on valid countries
 		Battles:
 			Add dumb logic for AI to attack
+			After a win, transfer armies from the attacking country to the defending country
 	Players:
 		Allow for more than 2 players
 		Support AI players
