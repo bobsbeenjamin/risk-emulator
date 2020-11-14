@@ -424,17 +424,27 @@ function handleAiAttacks(player) {
  */
 function getNextAiAttack(player) {
 	if(!isPlayerNPC()) {
-		console.warn("handleAiAttacks got called during a player's move. Ignoring.");
+		console.warn("handleAiAttacks got called during a human player's move. Ignoring.");
 		return null;
 	}
-	for(let country of thePlayersCountries(player)) {
-		for(let neighbor of country.neighboringCountries) {
-			neighbor = getCountry(neighbor);
-			if(country.numArmies > neighbor.numArmies && neighbor.controller != player)
-			return [country, neighbor];
+	for(let attackingCountry of thePlayersCountries(player)) {
+		for(let defendingCountry of attackingCountry.neighboringCountries) {
+			defendingCountry = getCountry(defendingCountry);
+			if(attackingCountry.numArmies > defendingCountry.numArmies
+					&& isValidAttack(attackingCountry, defendingCountry))
+				return [attackingCountry, defendingCountry];
 		}
 	}
 	return null;
+}
+
+/**
+ * @returns True if the attack is legal per the rules of Risk, False otherwise.
+ */
+function isValidAttack(attackingCountry, defendingCountry) {
+	return (attackingCountry.numArmies >= 2  // Safety check, per the rules of Risk
+			&& attackingCountry.controller != defendingCountry.controller
+	);
 }
 
 /**
