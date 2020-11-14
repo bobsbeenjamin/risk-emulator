@@ -45,16 +45,16 @@ TODO:
 		Rename playerOrder to turnOrder?
 		Refactor playerOrder, playerColors, etc to all be in a players array or object?
 	Bugs:
-		When attacking, sometimes the AI leaves its own countries with 0 armies
-		Fix formatting on t-rex-runner mini-game when called using param (or remove param support)
 		The first army is placed for me when I go first and I am using manual placement
 		Make "Would you like to start a new game?" work when changing new game settings
+		Fix formatting on t-rex-runner mini-game when called using param (or remove param support)
 	
 DONE:
 	Bugs:
 		Sometimes the AI picks my contry while placing armies
 		Why are the countries showing the wrong name during AI attack?
 		Why are no attacks being made by AI? (Global vars weren't being reset)
+		When attacking, sometimes the AI leaves its own countries with 0 armies
 	Gameplay:
 		Placing armies:
 			Initial placement:

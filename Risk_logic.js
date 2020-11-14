@@ -482,7 +482,8 @@ async function makeAttack(nextAttack=null, player=currentPlayer) {
 	if(nextAttack) {
 		[attackingCountry, defendingCountry] = nextAttack;
 		// TODO: Replace the following logic with dice rolls
-		attackingCountry.numArmies --;
+		if(attackingCountry.numArmies > 2)
+			attackingCountry.numArmies --;
 		defendingCountry.numArmies --;
 		console.log(attackingCountry.name + " -> " + defendingCountry.name);
 		drawArmiesForCountry(attackingCountry);
