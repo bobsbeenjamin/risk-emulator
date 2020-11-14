@@ -6,6 +6,7 @@ See https://github.com/bobsbeenjamin/risk-emulator for license and disclaimers
 
 /// Globals ///
 const ACTIVE_PLAYER_NUM = 1; // Indicates which player is the person playing the game
+const MIN_REINFORCEMENT_ARMIES = 3; // The minimum number of armies to reinforce with each turn
 const NUMBER_OF_COUNTRIES = 42; // The total number of countries on the map
 const PHASE_ORDER = ["reinforcement", "attack", "nonCombat", "end"]; // The phases of a turn
 const delay = ms => new Promise(res => setTimeout(res, ms)); // A handy delay function
@@ -56,14 +57,11 @@ function setUpGameBoard(onLoad=false, redrawMap=false) {
 			closeModal("diceRoller");
 		});
 		
-		// Get audio ready
+		// Initialize audio, the dice roller modal, the game canvas (all UI), and the continents (data)
 		initializeAudio();
-		
-		// Set up the dice roller
 		initializeDiceRoller();
-		
-		// Set up the canvas
 		initializeCanvas();
+		initializeContinents();
 	}
 
 	// Prep the map image
@@ -155,6 +153,33 @@ function initializeCanvas() {
 }
 
 /**
+ * Populate the countries of each continent. We do this here to be more dynamic (this will
+ * eventually support non-standard world maps, when themes go live).
+ */
+function initializeContinents() {
+	for(let country of countries) {
+		let continent = getContinent(country.continent);
+		if(!continent.hasOwnProperty("countries")) {
+			continent.countries = [];
+		}
+		continent.countries.push(country);  // Now the continents have pointers to country objects
+	}
+}
+
+/**
+ * @param continent: Either a continent name (string) or a continent object.
+ * @returns A continent object.
+ */
+function getContinent(continent) {
+	if(typeof continent == "string") {
+		continent = continents.filter(function(continent_) {
+			return (continent_.name == continent);
+		})[0];
+	}
+	return continent;
+}
+
+/**
  * Set appropriate global vars to their defaults.
  */
 function resetGlobalsForNewGame() {
@@ -240,7 +265,7 @@ function firstPlacementOfArmies() {
 	gameState = "initialPlacement";
 	const startingNumberOfArmies = 50 - (5 * numPlayers);
 	armiesLeftToPlace = [];
-	for(player of playerOrder) {
+	for(let player of playerOrder) {
 		armiesLeftToPlace[player] = startingNumberOfArmies;
 	}
 	currentPlayer = playerOrder[0];
@@ -253,7 +278,7 @@ function firstPlacementOfArmies() {
  */
 function mainGameLoop(round=1) {
 	roundCounter = round;
-	for(player of playerOrder) {
+	for(let player of playerOrder) {
 		currentPlayer = player;
 		turnCounter += 1;
 		takeTurn(player);  // TODO: Implement
@@ -276,7 +301,8 @@ function transitionGameState(actOnTransition=false) {
 		if(actOnTransition) {
 			switch(turnPhase) {
 				case "reinforcement":
-					armiesLeftToPlace = 3;  // FIXME: Calculate this based on Risk rules
+					armiesLeftToPlace = getNumReinforcementArmies(currentPlayer);
+					alert("Player " + currentPlayer + " gets to place " + armiesLeftToPlace + " armies.");
 					placeArmy();
 					break;
 				case "attack":
@@ -320,6 +346,31 @@ function transitionGameState(actOnTransition=false) {
 function beginFirstTurn() {
 	gameState = "playing";
 	transitionGameState(true);
+}
+
+/**
+ * @returns The number of armies that player should reinforce with (not including trading in cards).
+ */
+function getNumReinforcementArmies(player=currentPlayer) {
+	// Start with the number of contries controlled by player divided by 3, rounded up
+	numArmies = Math.ceil(thePlayersCountries(player).length / 3);
+	// Add on continent bonuses
+	for(let continent of continents) {
+		if(isContinentControlledBy(continent, player)) {
+			numArmies += continent.bonus;
+		}
+	}
+	return Math.max(numArmies, MIN_REINFORCEMENT_ARMIES);
+}
+
+/**
+ * @param continent: The continent, as a string or object.
+ * @param player: The player id.
+ * @returns true if every country in the continent is controlled by the player, false otherwise.
+ */
+function isContinentControlledBy(continent, player) {
+	continent = getContinent(continent);
+	return thePlayersCountries(player, continent.name).length == continent.countries.length;
 }
 
 /**
@@ -439,7 +490,7 @@ function getNextAiAttack(player) {
 }
 
 /**
- * @returns True if the attack is legal per the rules of Risk, False otherwise.
+ * @returns true if the attack is legal per the rules of Risk, false otherwise.
  */
 function isValidAttack(attackingCountry, defendingCountry) {
 	return (attackingCountry.numArmies >= 2  // Safety check, per the rules of Risk
@@ -466,12 +517,19 @@ function checkForLegalAttacks(player) {
 
 /**
  * @param player: The player to filter on (defaults to currentPlayer).
- * @returns An array of the countries controlled by the player.
+ * @param continent: A string representing the continent to filter on. Ignored if not passed.
+ * @returns An array of the countries controlled by the player, possibly in the continent.
  */
-function thePlayersCountries(player=currentPlayer) {
-	return countries.filter( function(country) {
+function thePlayersCountries(player=currentPlayer, continent=null) {
+	let playerCountries = countries.filter( function(country) {
 		return country.controller == player;
 	});
+	if(continent) {
+		playerCountries = playerCountries.filter( function(country) {
+			return country.continent == continent;
+		});
+	}
+	return playerCountries;
 }
 
 /**

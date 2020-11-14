@@ -2,8 +2,6 @@
 TODO:
 	Gameplay:
 		Placing armies:
-			Turn-based placement:
-				Calculate number of armies for reinforcement phase
 			Card reimbursements:
 				Allow human player to trade back cards for armies
 				Add dumb logic for AI to trade back cards
@@ -26,6 +24,7 @@ TODO:
 		Support remote human players (playing over the net)
 	Settings:
 		Choose player colors
+		Volume control
 		When selecting number of players, give up and down buttons for mobile
 		Set music themes
 		Choose skins
@@ -41,9 +40,11 @@ TODO:
 			Support effects
 			Dice rolls
 			Victory shout
-	Misc:
+	Misc/Organization:
 		Rename playerOrder to turnOrder?
 		Refactor playerOrder, playerColors, etc to all be in a players array or object?
+		Combine getCountry and getContinent?
+		Move helpers to another file (or maybe organize code into more than 2 files using logical breaks)
 	Bugs:
 		The first army is placed for me when I go first and I am using manual placement
 		Make "Would you like to start a new game?" work when changing new game settings
@@ -61,6 +62,8 @@ DONE:
 				Wait for the human player to place an army before the AI places their next army
 				Add logic for option to claim contries manually (random placement already works)
 			Refactor getRandomCountry() to filter on valid countries
+			Turn-based placement:
+				Calculate number of armies for reinforcement phase
 		Battles:
 			Add dumb logic for AI to attack
 			After a win, transfer armies from the attacking country to the defending country
