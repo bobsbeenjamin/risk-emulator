@@ -23,9 +23,13 @@ TODO:
 		Support local human players (on the same device)
 		Support remote human players (playing over the net)
 	Settings:
-		Choose player colors
+		Players:
+			Allow user to name players
+			Give players default names based on color or number
+			Choose player colors
+			Add pop-up menu with a table for all the player settings
+			When selecting number of players, give up and down buttons for mobile
 		Volume control
-		When selecting number of players, give up and down buttons for mobile
 		Set music themes
 		Choose skins
 		AI speed (ie, pause time between moves)
