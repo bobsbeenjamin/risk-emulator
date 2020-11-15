@@ -7,6 +7,9 @@ TODO:
 				Add dumb logic for AI to trade back cards
 				Enforce card trading when 5+ cards are in hand
 		Taking turns:
+			Support the non-combat phase
+			Pass the turn after non-combat
+			Also allow to pass the turn without taking a non-combat action
 			Get the turn taking loop working
 		Battles:
 			Allow the human player to attack
