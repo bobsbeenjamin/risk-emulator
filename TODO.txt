@@ -13,6 +13,12 @@ TODO:
 			Get the turn taking loop working
 		Battles:
 			Pause between attacks on AI turn
+			Use dice for battles
+				Show which country is attacking which
+				Show remaining armies on each country
+				Calculate how many dice to use for the attacker and defender
+				Use red dice for the attacker and white dice for the defender
+				Allow rerolls
 			When a player is eliminated, give their cards to the victor
 			Detect the final battle
 				Play special music
@@ -26,6 +32,9 @@ TODO:
 		Support local human players (on the same device)
 		Support remote human players (playing over the net)
 	Settings:
+		Battles:
+			Always use max dice? checkbox
+			Auto-battle checkbox (battle till someone dies)
 		Players:
 			Allow user to name players
 			Give players default names based on color or number
@@ -34,6 +43,7 @@ TODO:
 			When selecting number of players, give up and down buttons for mobile
 		Sounds:
 			Volume control
+			Sound effects? checkbox
 		Skins:
 			Choose music themes
 			Choose skins
@@ -90,7 +100,8 @@ DONE:
 		Allow for more than 2 players
 		Support AI players
 	Settings:
-		Move mute to settings
+		Sounds:
+			Move mute to settings
 	Sounds:
 		Music:
 			Add main screen music
