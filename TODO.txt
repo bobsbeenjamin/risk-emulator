@@ -12,7 +12,6 @@ TODO:
 			Also allow to pass the turn without taking a non-combat action
 			Get the turn taking loop working
 		Battles:
-			Allow the human player to attack
 			Pause between attacks on AI turn
 			When a player is eliminated, give their cards to the victor
 			Detect the final battle
@@ -49,6 +48,8 @@ TODO:
 	Sounds:
 		Music:
 			Load intro music at game load
+			Support multiple songs per track, and tie tracks to game state (combat, settings, etc)
+			Loop music tracks
 			Support music themes
 			Scrape and upload different songs
 			Add different types of music to different parts of the game
@@ -60,6 +61,7 @@ TODO:
 		Rename playerOrder to turnOrder?
 		Refactor playerOrder, playerColors, etc to all be in a players array or object?
 		Combine getCountry and getContinent?
+		Turn PHASE_ORDER and gameStateOrder into global enums
 		Move helpers to another file (or maybe organize code into more than 2 files using logical breaks)
 	Bugs:
 		The first army is placed for me when I go first and I am using manual placement
@@ -83,6 +85,7 @@ DONE:
 		Battles:
 			Add dumb logic for AI to attack
 			After a win, transfer armies from the attacking country to the defending country
+			Allow the human player to attack
 	Players:
 		Allow for more than 2 players
 		Support AI players

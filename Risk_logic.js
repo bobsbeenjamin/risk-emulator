@@ -13,6 +13,7 @@ const delay = ms => new Promise(res => setTimeout(res, ms)); // A handy delay fu
 
 var armiesLeftToPlace = []; // Number of armies each player needs to place; used during reinforcment and initial placement
 var boardDim = 100 + 10; // leave a padding of 5 on each side of the visible board
+var chosenCountry1 = null; // Holds the first chosen country for attack and non-combat moves
 var currentPlayer = 0; // The player whose turn it is
 var countryList = []; // Only used when in country location capture mode
 var drawSpace = null; // Holds the HTML canvas context
@@ -776,18 +777,45 @@ function drawMap(clearMapFirst=false) {
 function handleScreenClick(event) {
 	// Register click location
 	let pointerPos = getPointerPositionOnCanvas(htmlCanvasElement, event);
-	// Call a function based on game state, and pass the click location
+	// Special handling for countryCapture mode
 	if(gameState == "countryCapture") {
 		captureCountryLocations(pointerPos);
-	}
-	else if(isPlayerNPC()) { // We don't usually do anyting when it's not a human's turn
 		return;
 	}
-	else if(weArePlacingArmies()) {
-		let country = countryClick(pointerPos);
-		placeArmy(currentPlayer, country);
+	// We do anything else when it's not a human's turn
+	else if(isPlayerNPC()) {
+		return;
 	}
-	// TODO: Add more states and function calls to handle those states
+	// Placing armies
+	let country = countryClick(pointerPos);
+	if(weArePlacingArmies()) {
+		placeArmy(currentPlayer, country);
+		return;
+	}
+	// chosenCountry1 and chosenCountry2 are used for both attack and non-combat moves
+	if(!chosenCountry1) {
+		chosenCountry1 = country;
+		return; // return for now, because the next click will complete the move
+	}
+	const chosenCountry2 = country;
+	if(turnPhase == "attack") {
+		if(isValidAttack(chosenCountry1, chosenCountry2)) {
+			makeAttack([chosenCountry1, chosenCountry2]);
+		}
+		else {
+			alert("That's not a valid attack.");
+		}
+	}
+	else if(turnPhase == "nonCombat") {
+		// FIXME: Implement isValidNonCombatMove and makeNonCombatMove
+		if(isValidNonCombatMove(chosenCountry1, chosenCountry2)) {
+			makeNonCombatMove([chosenCountry1, chosenCountry2]);
+		}
+		else {
+			alert("That's not a valid move.");
+		}
+	}
+	chosenCountry1 = null;  // Clear this out for the next attack or non-combat move
 }
 
 /**
@@ -829,7 +857,7 @@ function captureCountryLocations(pointerPos) {
 }
 
 /**
- * Adapt functionality based on game state.
+ * Return the closest country to the pointer.
  */
 function countryClick(pointerPos) {
 	let closestCountry = null;
