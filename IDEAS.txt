@@ -18,11 +18,12 @@ Possible fun futures:
 			Use the first part of file names to identify when a song should be played?
 		Would be independent of skins, but skins would/could overwrite this
 		Possible music themes:
-			Classical music
-			SSB
-			Marvel
 			Batman/Superman
+			Classical music
+			Halo
+			Marvel
 			Pirates of the Caribbean
+			SSB
 
 Possible music scores:
 	Listen here for inspiration: https://www.youtube.com/watch?v=-7jjo8UICjQ
