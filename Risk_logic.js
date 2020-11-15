@@ -31,6 +31,7 @@ var playerOrder = []; // Determined at game start; the order of play
 var randomArmyPlacement = false; // Place armies randomly at game start?
 var roundCounter = 0; // Which round we're on; a round is complete once each player takes a turn
 var song = null; // Holds the current music track
+var textDisplayArea = null; // Holds the text display area, used for showing stats and game state to the user
 var turnCounter = 0; // Which turn we're on; each player gets one turn per round
 var turnPhase = ""; // The current phase for the current turn
 var waitingForUserAction = false; // Used for async hack (change later dude)
@@ -151,6 +152,7 @@ function initializeCanvas() {
 	drawSpace = htmlCanvasElement.getContext("2d");
 	drawSpace.font = "14px Arial";
 	htmlCanvasElement.addEventListener("click", handleScreenClick);
+	textDisplayArea = document.getElementById("textDisplayArea");
 }
 
 /**
@@ -264,6 +266,7 @@ function setPlayerOrder(firstPlayer) {
  */
 function firstPlacementOfArmies() {
 	gameState = "initialPlacement";
+	textDisplayArea.innerText = "Placing armies";
 	const startingNumberOfArmies = 50 - (5 * numPlayers);
 	armiesLeftToPlace = [];
 	for(let player of playerOrder) {
@@ -272,6 +275,33 @@ function firstPlacementOfArmies() {
 	currentPlayer = playerOrder[0];
 	// placeArmy will call placeAnotherArmy until all armies are placed
 	placeArmy();
+}
+
+/**
+ * Update the text display area based on game state.
+ */
+function updateStatusText(attackingCountry, defendingCountry) {
+	let text = "";
+	if(gameState == "playing") {
+		switch(turnPhase) {
+			case "reinforcement":
+				text = "Player " + currentPlayer + " has " + armiesLeftToPlace + " armies left to place.";
+			case "attack":
+				text = "Player " + attackingCountry + " is attacking " + defendingCountry;
+				break;
+			case "nonCombat":
+				text = "Waiting to make non-combat move.";
+				break;
+			case "end":
+				break;
+		}
+	}
+	else if(gameState == "initialPlacement") {
+		for(let player of playerOrder) {
+			text += "Player " + player + " has " + armiesLeftToPlace[player] + " armies left to place. ";
+		}
+	}
+	textDisplayArea.innerText = text;
 }
 
 /**
@@ -412,6 +442,7 @@ function placeArmy(player=currentPlayer, country=null) {
 	
 	// This will end up calling placeArmy if there are any armies left to place for the current player
 	decrementArmiesToPlace(currentPlayer);
+	updateStatusText();
 	placeAnotherArmy();  // Recursive call
 	if(turnPhase == "reinforcment" && !thereAreArmiesLeftToPlace(player)) {
 		startAttackPhase();
@@ -545,12 +576,13 @@ async function makeAttack(nextAttack=null, player=currentPlayer) {
 			attackingCountry.numArmies --;
 		defendingCountry.numArmies --;
 		console.log(attackingCountry.name + " -> " + defendingCountry.name);
-		drawArmiesForCountry(attackingCountry);
-		drawArmiesForCountry(defendingCountry);
 		
 		if(defendingCountry.numArmies <= 0) {
 			invadeCountry(attackingCountry, defendingCountry);
 		}
+		drawArmiesForCountry(attackingCountry);
+		drawArmiesForCountry(defendingCountry);
+		updateStatusText();
 	}
 	await delay(750); // Credit: https://stackoverflow.com/a/47480429/2221645
 }
