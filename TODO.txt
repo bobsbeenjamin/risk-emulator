@@ -10,6 +10,7 @@ TODO:
 			Get the turn taking loop working
 		Battles:
 			Allow the human player to attack
+			Pause between attacks on AI turn
 			When a player is eliminated, give their cards to the victor
 			Detect the final battle
 				Play special music
@@ -29,11 +30,19 @@ TODO:
 			Choose player colors
 			Add pop-up menu with a table for all the player settings
 			When selecting number of players, give up and down buttons for mobile
-		Volume control
-		Set music themes
-		Choose skins
-		AI speed (ie, pause time between moves)
-		AI difficulty
+		Sounds:
+			Volume control
+		Skins:
+			Choose music themes
+			Choose skins
+			Tie a skin to its associated music theme, but also let them be chosen separately
+		AI:
+			AI speed (ie, pause time between moves)
+			AI difficulty
+	Skins:
+		Support different maps
+		Ensure that continent logic works for different maps
+		Allow URL routes to skins (either as a param or a /)
 	Sounds:
 		Music:
 			Load intro music at game load
