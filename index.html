@@ -26,11 +26,13 @@
     Oh no! Your browser does not support the HTML5 canvas protocol. You can't play this game on this device.
   </canvas>
   <br/>
-  <p id="textDisplayArea">Click a button below to start</p>
+  <p id="text-display-area">Click a button below to start</p>
   <button onclick="startGame();">Start Game</button>
   <button type="button" onclick="openModal('settings');" data-toggle="modal" data-target="#settingsMenu">
     Settings
   </button>
+  <button id="start-non-combat" style="display: none;" onclick="startNonCombatPhase();">Start Non-Combat Phase</button>
+  <button id="end-turn" style="display: none;" onclick="endTurn();">Pass the Turn</button>
   
   <!-- Settings Menu -->
   <div id="settingsMenu" class="modal fade" role="dialog">

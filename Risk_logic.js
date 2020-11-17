@@ -13,6 +13,8 @@ const delay = ms => new Promise(res => setTimeout(res, ms)); // A handy delay fu
 
 var armiesLeftToPlace = []; // Number of armies each player needs to place; used during reinforcment and initial placement
 var boardDim = 100 + 10; // leave a padding of 5 on each side of the visible board
+var button_EndTurn = null; // The pass-turn button
+var button_NonCombat = null; // The non-combat button
 var chosenCountry1 = null; // Holds the first chosen country for attack and non-combat moves
 var currentPlayer = 0; // The player whose turn it is
 var countryList = []; // Only used when in country location capture mode
@@ -59,10 +61,10 @@ function setUpGameBoard(onLoad=false, redrawMap=false) {
 			closeModal("diceRoller");
 		});
 		
-		// Initialize audio, the dice roller modal, the game canvas (all UI), and the continents (data)
+		// Initialize audio, the dice roller modal, the elements (all UI), and the continents (data)
 		initializeAudio();
 		initializeDiceRoller();
-		initializeCanvas();
+		initializeUiElements();
 		initializeContinents();
 	}
 
@@ -145,6 +147,16 @@ function initializeDiceRoller() {
 }
 
 /**
+ * Bind some global vars to some UI elements.
+ */
+function initializeUiElements() {
+	button_EndTurn = document.getElementById("end-turn");
+	button_NonCombat = document.getElementById("start-non-combat");
+	textDisplayArea = document.getElementById("text-display-area");
+	initializeCanvas();
+}
+
+/**
  * Bind some global vars to the canvase element and context. Add onclick and default font.
  */
 function initializeCanvas() {
@@ -152,7 +164,6 @@ function initializeCanvas() {
 	drawSpace = htmlCanvasElement.getContext("2d");
 	drawSpace.font = "14px Arial";
 	htmlCanvasElement.addEventListener("click", handleScreenClick);
-	textDisplayArea = document.getElementById("textDisplayArea");
 }
 
 /**
@@ -211,6 +222,7 @@ function startGame() {
 	}
 	// Read settings and redraw the map
 	setUpGameBoard();
+	showOrHideGameButtons();
 	// Prepare for the first turn
 	initializeCountries();
 	initializePlayerColors();
@@ -222,6 +234,21 @@ function startGame() {
 	// Launch first turn
 	// gameState = "playing";
 	// mainGameLoop();
+}
+
+/**
+ * Show or hide the game buttons.
+ * @param show: If true, then show them. If false, then hide them. Defaults true.
+ */
+function showOrHideGameButtons(show=true) {
+	if(show) {
+		button_NonCombat.style.display = "inline";
+		button_EndTurn.style.display = "inline";
+	}
+	else {
+		button_NonCombat.style.display = "none";
+		button_EndTurn.style.display = "none";
+	}
 }
 
 /**
