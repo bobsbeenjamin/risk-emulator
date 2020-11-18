@@ -1,6 +1,7 @@
 
 Way to think of players:
 	Instead of referring to players by number (Player 1, Player 2, etc), refer to them by color (Red, Yellow, etc)
+	When showing players in the dice roller (and maybe other places), change the color of the text of their names to their color
 
 Possible fun futures:
 	"Skins":
