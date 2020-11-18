@@ -8,10 +8,10 @@ See https://github.com/bobsbeenjamin/risk-emulator for license and disclaimers
 const ACTIVE_PLAYER_NUM = 1; // Indicates which player is the person playing the game
 const MIN_REINFORCEMENT_ARMIES = 3; // The minimum number of armies to reinforce with each turn
 const NUMBER_OF_COUNTRIES = 42; // The total number of countries on the map
-const PHASE_ORDER = ["reinforcement", "attack", "nonCombat", "end"]; // The phases of a turn
+const PHASE_ORDER = ["reinforcement", "attack", "non-combat", "end"]; // The phases of a turn
 const delay = ms => new Promise(res => setTimeout(res, ms)); // A handy delay function
 
-var armiesLeftToPlace = []; // Number of armies each player needs to place; used during reinforcment and initial placement
+var armiesLeftToPlace = []; // Number of armies each player needs to place; used during reinforcement and initial placement
 var boardDim = 100 + 10; // leave a padding of 5 on each side of the visible board
 var button_EndTurn = null; // The pass-turn button
 var button_NonCombat = null; // The non-combat button
@@ -197,7 +197,7 @@ function getContinent(continent) {
  * Set appropriate global vars to their defaults.
  */
 function resetGlobalsForNewGame() {
-	armiesLeftToPlace = []; // Number of armies each player needs to place; used during reinforcment and initial placement
+	armiesLeftToPlace = []; // Number of armies each player needs to place; used during reinforcement and initial placement
 	currentPlayer = 0; // The player whose turn it is
 	someCountriesAreUnclaimed = true; // Are we still filling the board?
 	gameState = "setup"; // Gamestate mode: "playing" means a game is in progress
@@ -316,7 +316,7 @@ function updateStatusText(attackingCountry, defendingCountry) {
 			case "attack":
 				text = "Player " + attackingCountry + " is attacking " + defendingCountry;
 				break;
-			case "nonCombat":
+			case "non-combat":
 				text = "Waiting to make non-combat move.";
 				break;
 			case "end":
@@ -338,7 +338,7 @@ function mainGameLoop(round=1) {
 	roundCounter = round;
 	for(let player of playerOrder) {
 		currentPlayer = player;
-		turnCounter += 1;
+		turnCounter ++;
 		takeTurn(player);  // TODO: Implement
 	}
 	mainGameLoop(round + 1);
@@ -364,10 +364,10 @@ function transitionGameState(actOnTransition=false) {
 					placeArmy();
 					break;
 				case "attack":
-					startAttackPhase();
+					startAttackOrNoncombatPhase(attacking=true);
 					break;
-				case "nonCombat":
-					startNonCombatPhase();
+				case "non-combat":
+					startAttackOrNoncombatPhase(attacking=false);
 					break;
 				case "end":
 					nextTurn();
@@ -471,8 +471,8 @@ function placeArmy(player=currentPlayer, country=null) {
 	decrementArmiesToPlace(currentPlayer);
 	updateStatusText();
 	placeAnotherArmy();  // Recursive call
-	if(turnPhase == "reinforcment" && !thereAreArmiesLeftToPlace(player)) {
-		startAttackPhase();
+	if(turnPhase == "reinforcement" && !thereAreArmiesLeftToPlace(player)) {
+		startAttackOrNoncombatPhase(attacking=true);
 	}
 }
 
@@ -497,35 +497,46 @@ function decrementArmiesToPlace(player=currentPlayer) {
 }
 
 /**
- * Set the turnPhase. If the player is an NPC, then make their attacks.
+ * Set the turnPhase. If the player is an NPC, then make their moves.
+ * @param attacking: If true, start the attack phase. If false, start the non-combat phase.
  */
-function startAttackPhase(player=currentPlayer) {
-	turnPhase = "attack";
+function startAttackOrNoncombatPhase(attacking=true, player=currentPlayer) {
+	turnPhase = attacking ? "attack" : "non-combat";
 	
 	if(isPlayerNPC()) {
-		handleAiAttacks(player);
+		handleAiMoves(attacking, player);
 	}
 	else {
-		checkForLegalAttacks(player);
+		checkForLegalMoves(attacking, player);
 	}
 }
 
 /**
- * For now, make a bunch of random attacks, and always attack when a country is controlled that 
- * borders enemy countries with less armies.
+ * Attacks: For now, make a bunch of random attacks, and always attack when a country is controlled
+ * that  borders enemy countries with less armies.
+ * Non-combat moves: For now, make a random valid move about half the time. The other half do nothing.
  */
-function handleAiAttacks(player) {
+function handleAiMoves(attacking, player) {
 	if(!isPlayerNPC()) {
-		console.warn("handleAiAttacks got called during a player's move. Ignoring.");
+		console.warn("handleAiMoves got called during a player's move. Ignoring.");
 		return;
 	}
-
-	let nextAttack = getNextAiAttack(player);
-	while(nextAttack) {
-		makeAttack(nextAttack);
-		nextAttack = getNextAiAttack(player);
+	// Attack exhaustively
+	if(attacking) {
+		let nextMove = getNextAiAttack(player);
+		while(nextMove) {
+			makeMove(attacking, nextMove);
+			nextMove = getNextAiAttack(player);
+		}
 	}
-	transitionGameState();
+	// Only mak a non-combat move aboout half the time
+	else if(getDieRoll() > 3) {
+		let nextMove = getAiNonCombatMove(player);
+		if(nextMove)
+			makeMove(attacking, nextMove);
+	}
+	
+	transitionGameState(actOnTransition=true);
 }
 
 /**
@@ -534,14 +545,14 @@ function handleAiAttacks(player) {
  */
 function getNextAiAttack(player) {
 	if(!isPlayerNPC()) {
-		console.warn("handleAiAttacks got called during a human player's move. Ignoring.");
+		console.warn("getNextAiAttack got called during a human player's move. Ignoring.");
 		return null;
 	}
 	for(let attackingCountry of thePlayersCountries(player)) {
 		for(let defendingCountry of attackingCountry.neighboringCountries) {
 			defendingCountry = getCountry(defendingCountry);
 			if(attackingCountry.numArmies > defendingCountry.numArmies
-					&& isValidAttack(attackingCountry, defendingCountry))
+					&& isValidMove(attackingCountry, defendingCountry, true))
 				return [attackingCountry, defendingCountry];
 		}
 	}
@@ -549,26 +560,57 @@ function getNextAiAttack(player) {
 }
 
 /**
- * @returns true if the attack is legal per the rules of Risk, false otherwise.
+ * Gets the next non-combat move for the AI player. For now, find a country controlled by the player
+ * that borders a friendly country.
  */
-function isValidAttack(attackingCountry, defendingCountry) {
-	return (attackingCountry.numArmies >= 2  // Safety check, per the rules of Risk
-			&& attackingCountry.controller != defendingCountry.controller
-	);
+function getAiNonCombatMove(player) {
+	if(!isPlayerNPC()) {
+		console.warn("getNextAiNonCombatMove got called during a human player's move. Ignoring.");
+		return null;
+	}
+	for(let sourceCountry of thePlayersCountries(player)) {
+		for(let targetCountry of sourceCountry.neighboringCountries) {
+			targetCountry = getCountry(targetCountry);
+			if(isValidMove(sourceCountry, targetCountry, false))
+				return [sourceCountry, targetCountry];
+		}
+	}
+	return null;
 }
 
 /**
- * Return whether there are legal attacks for player. If there are none left, alert the user and
+ * @param attackingCountry: The country that armies are trying to move from.
+ * @param defendingCountry: The country that armies are trying to move to.
+ * @param attacking: If true, then check for an attack. If false, then check for a non-combat move.
+ * @returns true if the move is legal per the rules of Risk, false otherwise.
+ */
+function isValidMove(attackingCountry, defendingCountry, attacking) {
+	if(attacking) {
+		return (attackingCountry.numArmies >= 2  // Safety check, per the rules of Risk
+				&& attackingCountry.controller != defendingCountry.controller
+		);
+	}
+	else {
+		return (attackingCountry.numArmies >= 2  // Safety check, per the rules of Risk
+				&& attackingCountry.controller == defendingCountry.controller
+		);
+	}
+}
+
+/**
+ * Return whether there are legal moves for player. If there are none left, alert the user and
  * advance the turn.
+ * @param attacking: If true, then check for attacks. If false, then check for non-combat moves.
  * @param player: The player to check.
  * @returns true if there are legal attacks for player, false otherwise.
  */
-function checkForLegalAttacks(player) {
-	if(thereAreMovesLeft(player)) {
+function checkForLegalMoves(attacking, player) {
+	if(thereAreMovesLeft(attacking, player)) {
 		return true;
 	}
 	else {
-		alert("There are no more legal attacks. The turn is over.");
+		moveStr = attacking ? "attacks" : "non-combat moves";
+		alert("There are no more legal " + moveStr + ". The turn is over.");
 		nextTurn(); // We can skip the nonCombat phase, because there are no viable non-combat moves
 		return false;
 	}
@@ -593,18 +635,24 @@ function thePlayersCountries(player=currentPlayer, continent=null) {
 
 /**
  * Make a single attack. If nextAttack is passed, use it. Then roll the dice to attack.
- * @param nextAttack: An array representing the next AI attack. Format: an array with 2 countries.
+ * @param attacking: If true, then make an attack. If false, then make a non-combat move.
+ * @param theMove: An array representing the next move. Format: an array with 2 countries.
  */
-async function makeAttack(nextAttack=null, player=currentPlayer) {
-	if(nextAttack) {
-		[attackingCountry, defendingCountry] = nextAttack;
-		// TODO: Replace the following logic with dice rolls
-		if(attackingCountry.numArmies > 2)
-			attackingCountry.numArmies --;
-		defendingCountry.numArmies --;
-		console.log(attackingCountry.name + " -> " + defendingCountry.name);
-		
-		if(defendingCountry.numArmies <= 0) {
+async function makeMove(attacking, theMove=null, player=currentPlayer) {
+	if(theMove) {
+		[attackingCountry, defendingCountry] = theMove;
+		if(attacking) {
+			// TODO: Replace the following logic with dice rolls
+			if(attackingCountry.numArmies > 2)
+				attackingCountry.numArmies --;
+			defendingCountry.numArmies --;
+			console.log(attackingCountry.name + " -> " + defendingCountry.name);
+			
+			if(defendingCountry.numArmies <= 0) {
+				invadeCountry(attackingCountry, defendingCountry);
+			}
+		}
+		else { // non-combat: just move over about half the armies
 			invadeCountry(attackingCountry, defendingCountry);
 		}
 		drawArmiesForCountry(attackingCountry);
@@ -628,20 +676,28 @@ function invadeCountry(attackingCountry, defendingCountry) {
 		numArmiesToTransfer = attackingCountry.numArmies - 1;
 	// Make the transfer
 	attackingCountry.numArmies -= numArmiesToTransfer;
-	defendingCountry.numArmies = numArmiesToTransfer;
+	defendingCountry.numArmies += numArmiesToTransfer; // Should be 0 before this when attacking
 	defendingCountry.controller = attackingCountry.controller;
 	drawArmiesForCountry(attackingCountry);
 	drawArmiesForCountry(defendingCountry);
 }
 
 /**
+ * @param attacking: If true, then check for attacks. If false, then check for non-combat moves.
  * @param player: The player to check.
  * @returns Whether the player has any countries with more than one army.
  */
-function thereAreMovesLeft(player) {  // TODO: Adapt this for non-combat vs attack checks
+function thereAreMovesLeft(attacking, player) {
 	for(let country of countries) {
 		if(country.controller == player && country.numArmies > 0) {
-			return true;
+			if(attacking && isPlayerNPC(player)) {
+				for(let neighbor of country.neighboringCountries) {
+					neighbor = getCountry(neighbor);
+					if(neighbor.numArmies < country.numArmies)
+						return true;
+				}
+			}
+			else return true;
 		}
 	}
 	return false;
@@ -652,10 +708,12 @@ function thereAreMovesLeft(player) {  // TODO: Adapt this for non-combat vs atta
  */
 function nextTurn() {
 	getNextPlayer();
-	turnPhase = "reinforcement";
+	turnCounter ++;
 	if(playerOrder.indexOf(currentPlayer) == 0) {
 		roundCounter ++;
 	}
+	turnPhase = "reinforcement";
+	armiesLeftToPlace = getNumReinforcementArmies();
 }
 
 /**
@@ -858,17 +916,17 @@ function handleScreenClick(event) {
 	}
 	const chosenCountry2 = country;
 	if(turnPhase == "attack") {
-		if(isValidAttack(chosenCountry1, chosenCountry2)) {
-			makeAttack([chosenCountry1, chosenCountry2]);
+		if(isValidMove(chosenCountry1, chosenCountry2, true)) {
+			makeMove(true, [chosenCountry1, chosenCountry2]);
 		}
 		else {
 			alert("That's not a valid attack.");
 		}
 	}
-	else if(turnPhase == "nonCombat") {
-		// FIXME: Implement isValidNonCombatMove and makeNonCombatMove
-		if(isValidNonCombatMove(chosenCountry1, chosenCountry2)) {
-			makeNonCombatMove([chosenCountry1, chosenCountry2]);
+	else if(turnPhase == "non-combat") {
+		if(isValidMove(chosenCountry1, chosenCountry2, false)) {
+			makeMove(false, [chosenCountry1, chosenCountry2]);
+			nextTurn();
 		}
 		else {
 			alert("That's not a valid move.");
@@ -985,7 +1043,8 @@ function getPlayerColorsString() {
 }
 
 /**
- * Roll a single die. This just returns a number.
+ * Roll a single die.
+ * @returns An int between 1 and 6, inclusive.
  */
 function getDieRoll() {
     let min = Math.ceil(1);

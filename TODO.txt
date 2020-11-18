@@ -7,9 +7,7 @@ TODO:
 				Add dumb logic for AI to trade back cards
 				Enforce card trading when 5+ cards are in hand
 		Taking turns:
-			Support the non-combat phase
-			Pass the turn after non-combat
-			Also allow to pass the turn without taking a non-combat action
+			Detect end of game and declare the winner
 			Get the turn taking loop working
 		Battles:
 			Pause between attacks on AI turn
@@ -34,6 +32,7 @@ TODO:
 	Settings:
 		Battles:
 			Always use max dice? checkbox
+			Use dice? checkbox (when unchecked, use deterministic logic)
 			Auto-battle checkbox (battle till someone dies)
 		Players:
 			Allow user to name players
@@ -74,7 +73,9 @@ TODO:
 		Turn PHASE_ORDER and gameStateOrder into global enums
 		Move helpers to another file (or maybe organize code into more than 2 files using logical breaks)
 	Bugs:
+		Get AI to take a turn after me (currently nothing happens)
 		The first army is placed for me when I go first and I am using manual placement
+		When populating the world, if I go first, the last click places my first reinforcement army
 		Make "Would you like to start a new game?" work when changing new game settings
 		Fix formatting on t-rex-runner mini-game when called using param (or remove param support)
 	
@@ -96,6 +97,10 @@ DONE:
 			Add dumb logic for AI to attack
 			After a win, transfer armies from the attacking country to the defending country
 			Allow the human player to attack
+		Taking turns:
+			Support the non-combat phase
+			Pass the turn after non-combat
+			Also allow to pass the turn without taking a non-combat action
 	Players:
 		Allow for more than 2 players
 		Support AI players
