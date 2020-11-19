@@ -5,13 +5,23 @@ See https://github.com/bobsbeenjamin/risk-emulator for license and disclaimers
 */
 
 /// Globals ///
+// Global constants
 const ACTIVE_PLAYER_NUM = 1; // Indicates which player is the person playing the game
-const GAME_STATE_ORDER = ["setup", "ready", "initialPlacement", "playing"];
 const MIN_REINFORCEMENT_ARMIES = 3; // The minimum number of armies to reinforce with each turn
 const NUMBER_OF_COUNTRIES = 42; // The total number of countries on the map
-const PHASE_ORDER = ["reinforcement", "attack", "non-combat", "end"]; // The phases of a turn
-const delay = ms => new Promise(res => setTimeout(res, ms)); // A handy delay function
-
+// The possible game states
+const ENUM_STATE_SETUP = 1,
+      ENUM_STATE_READY = 2,
+      ENUM_STATE_INITIALPLACEMENT = 3,
+      ENUM_STATE_PLAYING = 4;
+const GAME_STATE_ORDER = [ENUM_STATE_SETUP, ENUM_STATE_READY, ENUM_STATE_INITIALPLACEMENT, ENUM_STATE_PLAYING];
+// The phases of a turn
+const ENUM_PHASE_REINFORCEMENT = 1,
+	  ENUM_PHASE_ATTACK = 2,
+	  ENUM_PHASE_NONCOMBAT = 3,
+	  ENUM_PHASE_END = 4;
+const PHASE_ORDER = [ENUM_PHASE_REINFORCEMENT, ENUM_PHASE_ATTACK, ENUM_PHASE_NONCOMBAT, ENUM_PHASE_END];
+// Global variables
 var armiesLeftToPlace = []; // Number of armies each player needs to place; used during reinforcement and initial placement
 var boardDim = 100 + 10; // leave a padding of 5 on each side of the visible board
 var button_EndTurn = null; // The pass-turn button
@@ -25,7 +35,7 @@ var htmlCanvasElement = null; // Holds the HTML canvas element (useful for sizin
 var someCountriesAreUnclaimed = true; // Are we still filling the board?
 var isMuted = false; // Is the background music muted?
 var mapImage = null; // The map image that we draw on
-var gameState = "setup"; // Gamestate mode: "playing" means a game is in progress
+var gameState = ENUM_STATE_SETUP; // Gamestate mode: ENUM_STATE_PLAYING means a game is in progress
 var musicList = {}; // Holds Audio objects to load and play music
 var numCountriesWithArmies = 0; // How many countries have armies on them; only used during setup
 var numPlayers = 2; // The number of players in the game
@@ -201,7 +211,7 @@ function resetGlobalsForNewGame() {
 	armiesLeftToPlace = []; // Number of armies each player needs to place; used during reinforcement and initial placement
 	currentPlayer = 0; // The player whose turn it is
 	someCountriesAreUnclaimed = true; // Are we still filling the board?
-	gameState = "setup"; // Gamestate mode: "playing" means a game is in progress
+	gameState = ENUM_STATE_SETUP; // Gamestate mode: ENUM_STATE_PLAYING means a game is in progress
 	numCountriesWithArmies = 0; // How many countries have armies on them; only used during setup
 	playerColors = []; // The colors for each player
 	playerOrder = []; // Determined at game start; the order of play
@@ -216,7 +226,7 @@ function resetGlobalsForNewGame() {
  */
 function startGame() {
 	// Give the player an option to abort while a game is going
-	if(["initialPlacement", "playing"].includes(gameState)) {
+	if([ENUM_STATE_INITIALPLACEMENT, ENUM_STATE_PLAYING].includes(gameState)) {
 		startNewGame = confirm("Do you want to abandon this game and start a new game?");
 		if(!startNewGame)
 			return;
@@ -233,10 +243,10 @@ function startGame() {
 	setPlayerOrder(firstPlayer);
 	// Place armies
 	console.log("::Starting a new game::");
-	gameState = "ready";
+	gameState = ENUM_STATE_READY;
 	transitionGameState(true);
 	// Launch first turn
-	// gameState = "playing";
+	// gameState = ENUM_STATE_PLAYING;
 	// mainGameLoop();
 }
 
@@ -296,7 +306,7 @@ function setPlayerOrder(firstPlayer) {
  * Place armies at the beginning of the game.
  */
 function firstPlacementOfArmies() {
-	gameState = "initialPlacement";
+	gameState = ENUM_STATE_INITIALPLACEMENT;
 	textDisplayArea.innerText = "Placing armies";
 	const startingNumberOfArmies = 50 - (5 * numPlayers);
 	armiesLeftToPlace = [];
@@ -313,21 +323,21 @@ function firstPlacementOfArmies() {
  */
 function updateStatusText(attackingCountry, defendingCountry) {
 	let text = "";
-	if(gameState == "playing") {
+	if(gameState == ENUM_STATE_PLAYING) {
 		switch(turnPhase) {
-			case "reinforcement":
+			case ENUM_PHASE_REINFORCEMENT:
 				text = "Player " + currentPlayer + " has " + armiesLeftToPlace + " armies left to place.";
-			case "attack":
+			case ENUM_PHASE_ATTACK:
 				text = "Player " + attackingCountry + " is attacking " + defendingCountry;
 				break;
-			case "non-combat":
+			case ENUM_PHASE_NONCOMBAT:
 				text = "Waiting to make non-combat move.";
 				break;
-			case "end":
+			case ENUM_PHASE_END:
 				break;
 		}
 	}
-	else if(gameState == "initialPlacement") {
+	else if(gameState == ENUM_STATE_INITIALPLACEMENT) {
 		for(let player of playerOrder) {
 			text += "Player " + player + " has " + armiesLeftToPlace[player] + " armies left to place. ";
 		}
@@ -353,34 +363,34 @@ function mainGameLoop(round=1) {
  * @param actOnTransition: If true, then call the appropriate function based on game state.
  */
 function transitionGameState(actOnTransition=false) {
-	// When the state is "playing", transition turn phase
-	if(gameState == "playing") {
+	// When the state is ENUM_STATE_PLAYING, transition turn phase
+	if(gameState == ENUM_STATE_PLAYING) {
 		const currentPhaseIdx = PHASE_ORDER.indexOf(turnPhase);
 		if(currentPhaseIdx < 0)
-			turnPhase = "reinforcement";
+			turnPhase = ENUM_PHASE_REINFORCEMENT;
 		else
 			turnPhase = PHASE_ORDER[(currentPhaseIdx + 1) % PHASE_ORDER.length];
 		if(actOnTransition) {
 			switch(turnPhase) {
-				case "reinforcement":
+				case ENUM_PHASE_REINFORCEMENT:
 					startReinforcementPhase();
 					break;
-				case "attack":
+				case ENUM_PHASE_ATTACK:
 					startAttackOrNoncombatPhase(attacking=true);
 					break;
-				case "non-combat":
+				case ENUM_PHASE_NONCOMBAT:
 					startAttackOrNoncombatPhase(attacking=false);
 					break;
-				case "end":
+				case ENUM_PHASE_END:
 					nextTurn();
 					break;
 			}
 		}
 	}
-	// Before the state is "playing", transition state
+	// Before the state is ENUM_STATE_PLAYING, transition state
 	else {
 		const currentGameStateIdx = GAME_STATE_ORDER.indexOf(gameState);
-		if(0 < currentGameStateIdx < 3) { // Only change the state when it is valid and is not "playing"
+		if(0 < currentGameStateIdx < 3) { // Only change the state when it is valid and is not ENUM_STATE_PLAYING
 			gameState = GAME_STATE_ORDER[currentGameStateIdx + 1];
 		}
 		else {
@@ -388,10 +398,10 @@ function transitionGameState(actOnTransition=false) {
 		}
 		if(actOnTransition) {
 			switch(gameState) {
-				case "initialPlacement":
+				case ENUM_STATE_INITIALPLACEMENT:
 					firstPlacementOfArmies();
 					break;
-				case "playing":
+				case ENUM_STATE_PLAYING:
 					beginFirstTurn();
 					break;
 			}
@@ -403,7 +413,7 @@ function transitionGameState(actOnTransition=false) {
  * Begin the first turn, setting state and such.
  */
 function beginFirstTurn() {
-	gameState = "playing";
+	gameState = ENUM_STATE_PLAYING;
 	logNewTurn();
 	transitionGameState(true);
 }
@@ -412,7 +422,7 @@ function beginFirstTurn() {
  * Set the turnPhase. If the player is an NPC, then place their armies.
  */
 function startReinforcementPhase(player=currentPlayer) {
-	turnPhase = "reinforcement";
+	turnPhase = ENUM_PHASE_REINFORCEMENT;
 	armiesLeftToPlace = getNumReinforcementArmies(currentPlayer);
 	alert("Player " + currentPlayer + " gets to place " + armiesLeftToPlace + " armies.");
 	placeArmy();
@@ -457,7 +467,7 @@ function placeArmy(player=currentPlayer, country=null) {
 	if(!country) {
 		// For an NPC, always place an army. For a human player, this function can be called with
 		// placeArmyForHuman set to true. In all other cases, exit early.
-		if(isPlayerNPC() || (gameState == "initialPlacement" && randomArmyPlacement)) {
+		if(isPlayerNPC() || (gameState == ENUM_STATE_INITIALPLACEMENT && randomArmyPlacement)) {
 			country = getRandomCountry(player);
 		}
 		else return; // Exit early
@@ -479,7 +489,7 @@ function placeArmy(player=currentPlayer, country=null) {
 	drawArmiesForCountry(country);
 	
 	// Handle someCountriesAreUnclaimed logic. We count up numCountriesWithArmies until the world is full.
-	if(gameState == "initialPlacement" && someCountriesAreUnclaimed) {
+	if(gameState == ENUM_STATE_INITIALPLACEMENT && someCountriesAreUnclaimed) {
 		numCountriesWithArmies += 1;
 		if(numCountriesWithArmies >= NUMBER_OF_COUNTRIES)
 			someCountriesAreUnclaimed = false;
@@ -489,7 +499,7 @@ function placeArmy(player=currentPlayer, country=null) {
 	decrementArmiesToPlace(currentPlayer);
 	updateStatusText();
 	placeAnotherArmy();  // Recursive call
-	if(turnPhase == "reinforcement" && !thereAreArmiesLeftToPlace(player)) {
+	if(turnPhase == ENUM_PHASE_REINFORCEMENT && !thereAreArmiesLeftToPlace(player)) {
 		startAttackOrNoncombatPhase(attacking=true);
 	}
 }
@@ -503,11 +513,11 @@ function decrementArmiesToPlace(player=currentPlayer) {
 	if(!player || !thereAreArmiesLeftToPlace(player)) {
 		return false;
 	}
-	if(gameState == "initialPlacement") {
+	if(gameState == ENUM_STATE_INITIALPLACEMENT) {
 		armiesLeftToPlace[player] --;
 		return true;
 	}
-	else if(turnPhase == "reinforcement") {
+	else if(turnPhase == ENUM_PHASE_REINFORCEMENT) {
 		armiesLeftToPlace --;
 		return true;
 	}
@@ -519,7 +529,7 @@ function decrementArmiesToPlace(player=currentPlayer) {
  * @param attacking: If true, start the attack phase. If false, start the non-combat phase.
  */
 function startAttackOrNoncombatPhase(attacking=true, player=currentPlayer) {
-	turnPhase = attacking ? "attack" : "non-combat";
+	turnPhase = attacking ? ENUM_PHASE_ATTACK : ENUM_PHASE_NONCOMBAT;
 	console.info("::Starting the " + turnPhase + " phase::");
 	
 	if(isPlayerNPC()) {
@@ -800,7 +810,7 @@ function drawArmiesForCountry(country) {
 }
 
 /**
- * Place another army. If gameState is "initialPlacement", then the next player places. Otherwise, the
+ * Place another army. If gameState is ENUM_STATE_INITIALPLACEMENT, then the next player places. Otherwise, the
  * current player places.
  */
 function placeAnotherArmy() {
@@ -812,7 +822,7 @@ function placeAnotherArmy() {
 		transitionGameState(true);
 		return;
 	}
-	if(gameState == "initialPlacement")
+	if(gameState == ENUM_STATE_INITIALPLACEMENT)
 		getNextPlayer();
 	if(thereAreArmiesLeftToPlace(currentPlayer) && (isPlayerNPC() || (randomArmyPlacement && someCountriesAreUnclaimed))) {
 		placeArmy();
@@ -823,7 +833,7 @@ function placeAnotherArmy() {
  * @returns true if the game is in an army placement state, false otherwise.
  */
 function weArePlacingArmies() {
-	return (gameState === "initialPlacement" || turnPhase === "reinforcement");
+	return (gameState === ENUM_STATE_INITIALPLACEMENT || turnPhase === ENUM_PHASE_REINFORCEMENT);
 }
 
 /**
@@ -943,7 +953,7 @@ function handleScreenClick(event) {
 		return; // return for now, because the next click will complete the move
 	}
 	const chosenCountry2 = country;
-	if(turnPhase == "attack") {
+	if(turnPhase == ENUM_PHASE_ATTACK) {
 		if(isValidMove(chosenCountry1, chosenCountry2, true)) {
 			makeMove(true, [chosenCountry1, chosenCountry2]);
 		}
@@ -951,7 +961,7 @@ function handleScreenClick(event) {
 			alert("That's not a valid attack.");
 		}
 	}
-	else if(turnPhase == "non-combat") {
+	else if(turnPhase == ENUM_PHASE_NONCOMBAT) {
 		if(isValidMove(chosenCountry1, chosenCountry2, false)) {
 			makeMove(false, [chosenCountry1, chosenCountry2]);
 			nextTurn();
@@ -992,7 +1002,7 @@ function captureCountryLocations(pointerPos) {
 		downloadElement.download = "country_locations.json";
 		downloadElement.click();
 		// Stop capture mode
-		gameState = "ready";
+		gameState = ENUM_STATE_READY;
 	}
 	else {
 		let countryItem = pointerPos;
@@ -1118,13 +1128,13 @@ function isPlayerNPC(player=null) {
  * armiesLeftToPlace is greater than 0 during reinforcement.
  */
 function thereAreArmiesLeftToPlace(player=null) {
-	if(gameState == "initialPlacement") {
+	if(gameState == ENUM_STATE_INITIALPLACEMENT) {
 		if(player)
 			return (armiesLeftToPlace[player] > 0);
 		else
 			return armiesLeftToPlace.some(item => item > 0);
 	}
-	else if(turnPhase == "reinforcement") {
+	else if(turnPhase == ENUM_PHASE_REINFORCEMENT) {
 		return (armiesLeftToPlace > 0);
 	}
 	else {
