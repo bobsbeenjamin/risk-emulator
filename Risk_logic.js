@@ -361,9 +361,7 @@ function transitionGameState(actOnTransition=false) {
 		if(actOnTransition) {
 			switch(turnPhase) {
 				case "reinforcement":
-					armiesLeftToPlace = getNumReinforcementArmies(currentPlayer);
-					alert("Player " + currentPlayer + " gets to place " + armiesLeftToPlace + " armies.");
-					placeArmy();
+					startReinforcementPhase();
 					break;
 				case "attack":
 					startAttackOrNoncombatPhase(attacking=true);
@@ -407,6 +405,16 @@ function beginFirstTurn() {
 	gameState = "playing";
 	logNewTurn();
 	transitionGameState(true);
+}
+
+/**
+ * Set the turnPhase. If the player is an NPC, then place their armies.
+ */
+function startReinforcementPhase(player=currentPlayer) {
+	turnPhase = "reinforcement";
+	armiesLeftToPlace = getNumReinforcementArmies(currentPlayer);
+	alert("Player " + currentPlayer + " gets to place " + armiesLeftToPlace + " armies.");
+	placeArmy();
 }
 
 /**
@@ -643,7 +651,7 @@ function thePlayersCountries(player=currentPlayer, continent=null) {
  * @param attacking: If true, then make an attack. If false, then make a non-combat move.
  * @param theMove: An array representing the next move. Format: an array with 2 countries.
  */
-async function makeMove(attacking, theMove=null, player=currentPlayer) {
+function makeMove(attacking, theMove=null, player=currentPlayer) {
 	if(theMove) {
 		[attackingCountry, defendingCountry] = theMove;
 		if(attacking) {
@@ -665,7 +673,6 @@ async function makeMove(attacking, theMove=null, player=currentPlayer) {
 		drawArmiesForCountry(defendingCountry);
 		updateStatusText();
 	}
-	await delay(750); // Credit: https://stackoverflow.com/a/47480429/2221645
 }
 
 /**
@@ -718,8 +725,8 @@ function nextTurn() {
 	if(playerOrder.indexOf(currentPlayer) == 0) {
 		roundCounter ++;
 	}
-	turnPhase = "reinforcement";
-	armiesLeftToPlace = getNumReinforcementArmies();
+	logNewTurn();
+	startReinforcementPhase();
 }
 
 /**
