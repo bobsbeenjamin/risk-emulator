@@ -74,7 +74,6 @@ TODO:
 		Move helpers to another file (or maybe organize code into more than 2 files using logical breaks)
 	Bugs:
 		The reinforcement number alert happens before the countries are redrawn
-		The first army is placed for me when I go first and I am using manual placement
 		When populating the world, if I go first, the last click places my first reinforcement army
 		Make "Would you like to start a new game?" work when changing new game settings
 		Fix formatting on t-rex-runner mini-game when called using param (or remove param support)
@@ -86,6 +85,7 @@ DONE:
 		Why are no attacks being made by AI? (Global vars weren't being reset)
 		When attacking, sometimes the AI leaves its own countries with 0 armies
 		Get AI to take a turn after me (currently nothing happens)
+		The first army is placed for me when I go first and I am using manual placement
 	Gameplay:
 		Placing armies:
 			Initial placement:

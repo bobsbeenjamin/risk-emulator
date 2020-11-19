@@ -452,9 +452,14 @@ function placeArmy(player=currentPlayer, country=null) {
 		return;
 	}
 	
-	// For NPC, place an army. For the active player, this function is called from handleScreenClick.
-	if(isPlayerNPC() || !country) {
-		country = getRandomCountry(player);
+	// If no country is passed, then analyze whether we should pick the country ourselves
+	if(!country) {
+		// For an NPC, always place an army. For a human player, this function can be called with
+		// placeArmyForHuman set to true. In all other cases, exit early.
+		if(isPlayerNPC() || (gameState == "initialPlacement" && randomArmyPlacement)) {
+			country = getRandomCountry(player);
+		}
+		else return; // Exit early
 	}
 	else if(someCountriesAreUnclaimed && country.numArmies > 0) {
 		alert("Choose a country with no armies until the world is full.");
@@ -473,7 +478,7 @@ function placeArmy(player=currentPlayer, country=null) {
 	drawArmiesForCountry(country);
 	
 	// Handle someCountriesAreUnclaimed logic. We count up numCountriesWithArmies until the world is full.
-	if(someCountriesAreUnclaimed) {
+	if(gameState == "initialPlacement" && someCountriesAreUnclaimed) {
 		numCountriesWithArmies += 1;
 		if(numCountriesWithArmies >= NUMBER_OF_COUNTRIES)
 			someCountriesAreUnclaimed = false;
