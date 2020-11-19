@@ -232,7 +232,8 @@ function startGame() {
 	setPlayerOrder(firstPlayer);
 	// Place armies
 	console.log("::Starting a new game::");
-	firstPlacementOfArmies();
+	gameState = "ready";
+	transitionGameState(true);
 	// Launch first turn
 	// gameState = "playing";
 	// mainGameLoop();
@@ -388,7 +389,7 @@ function transitionGameState(actOnTransition=false) {
 		if(actOnTransition) {
 			switch(gameState) {
 				case "initialPlacement":
-					placeArmy();
+					firstPlacementOfArmies();
 					break;
 				case "playing":
 					beginFirstTurn();
