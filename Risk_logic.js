@@ -321,17 +321,28 @@ function firstPlacementOfArmies() {
 /**
  * Update the text display area based on game state.
  */
-function updateStatusText(attackingCountry, defendingCountry) {
+function updateStatusText(attackingCountry=null, defendingCountry=null) {
 	let text = "";
 	if(gameState == ENUM_STATE_PLAYING) {
 		switch(turnPhase) {
 			case ENUM_PHASE_REINFORCEMENT:
 				text = "Player " + currentPlayer + " has " + armiesLeftToPlace + " armies left to place.";
+				break;
 			case ENUM_PHASE_ATTACK:
-				text = "Player " + attackingCountry + " is attacking " + defendingCountry;
+				if(attackingCountry && defendingCountry) {
+					text = "Player " + currentPlayer + " attacked: " + attackingCountry.name + " -> "
+						   + defendingCountry.name;
+					break;
+				}
+				text = "Waiting for attack.";
 				break;
 			case ENUM_PHASE_NONCOMBAT:
-				text = "Waiting to make non-combat move.";
+				if(attackingCountry && defendingCountry) {
+					text = "Player " + currentPlayer + " made non-combat move: " + attackingCountry.name
+						   +  "-> " + defendingCountry.name;
+					break;
+				}
+				text = "Waiting for non-combat move.";
 				break;
 			case ENUM_PHASE_END:
 				break;
@@ -407,6 +418,7 @@ function transitionGameState(actOnTransition=false) {
 			}
 		}
 	}
+	updateStatusText();
 }
 
 /**
@@ -499,7 +511,7 @@ function placeArmy(player=currentPlayer, country=null) {
 	decrementArmiesToPlace(currentPlayer);
 	updateStatusText();
 	placeAnotherArmy();  // Recursive call
-	if(turnPhase == ENUM_PHASE_REINFORCEMENT && !thereAreArmiesLeftToPlace(player)) {
+	if(turnPhase == ENUM_PHASE_REINFORCEMENT && !thereAreArmiesLeftToPlace(player)) { // FIXME: Delete this block?
 		startAttackOrNoncombatPhase(attacking=true);
 	}
 }
@@ -687,7 +699,7 @@ function makeMove(attacking, theMove=null, player=currentPlayer) {
 		console.log(moveStr + attackingCountry.name + " -> " + defendingCountry.name);
 		drawArmiesForCountry(attackingCountry);
 		drawArmiesForCountry(defendingCountry);
-		updateStatusText();
+		updateStatusText(attackingCountry, defendingCountry);
 	}
 }
 
