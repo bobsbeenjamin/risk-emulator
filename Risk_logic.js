@@ -6,6 +6,7 @@ See https://github.com/bobsbeenjamin/risk-emulator for license and disclaimers
 
 /// Globals ///
 const ACTIVE_PLAYER_NUM = 1; // Indicates which player is the person playing the game
+const GAME_STATE_ORDER = ["setup", "ready", "initialPlacement", "playing"];
 const MIN_REINFORCEMENT_ARMIES = 3; // The minimum number of armies to reinforce with each turn
 const NUMBER_OF_COUNTRIES = 42; // The total number of countries on the map
 const PHASE_ORDER = ["reinforcement", "attack", "non-combat", "end"]; // The phases of a turn
@@ -378,10 +379,9 @@ function transitionGameState(actOnTransition=false) {
 	}
 	// Before the state is "playing", transition state
 	else {
-		const gameStateOrder = ["setup", "ready", "initialPlacement", "playing"];
-		const currentGameStateIdx = gameStateOrder.indexOf(gameState);
+		const currentGameStateIdx = GAME_STATE_ORDER.indexOf(gameState);
 		if(0 < currentGameStateIdx < 3) { // Only change the state when it is valid and is not "playing"
-			gameState = gameStateOrder[currentGameStateIdx + 1];
+			gameState = GAME_STATE_ORDER[currentGameStateIdx + 1];
 		}
 		else {
 			console.warn("transitionGameState was called, but the game state didn't change.");
