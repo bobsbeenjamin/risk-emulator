@@ -204,8 +204,8 @@ function resetGlobalsForNewGame() {
 	numCountriesWithArmies = 0; // How many countries have armies on them; only used during setup
 	playerColors = []; // The colors for each player
 	playerOrder = []; // Determined at game start; the order of play
-	roundCounter = 0; // Which round we're on; a round is complete once each player takes a turn
-	turnCounter = 0; // Which turn we're on; each player gets one turn per round
+	roundCounter = 1; // Which round we're on; a round is complete once each player takes a turn
+	turnCounter = 1; // Which turn we're on; each player gets one turn per round
 	turnPhase = ""; // The current phase for the current turn
 }
 
@@ -220,9 +220,10 @@ function startGame() {
 		if(!startNewGame)
 			return;
 	}
+	console.log("Pregame actions...");
 	// Read settings and redraw the map
 	setUpGameBoard();
-	showOrHideGameButtons();
+	showOrHideGameButtons(true);
 	// Prepare for the first turn
 	initializeCountries();
 	initializePlayerColors();
@@ -230,6 +231,7 @@ function startGame() {
 	const firstPlayer = rollDice("Roll to decide who goes first", "goes first", true, numPlayers);
 	setPlayerOrder(firstPlayer);
 	// Place armies
+	console.log("::Starting a new game::");
 	firstPlacementOfArmies();
 	// Launch first turn
 	// gameState = "playing";
@@ -403,6 +405,7 @@ function transitionGameState(actOnTransition=false) {
  */
 function beginFirstTurn() {
 	gameState = "playing";
+	logNewTurn();
 	transitionGameState(true);
 }
 
@@ -458,6 +461,7 @@ function placeArmy(player=currentPlayer, country=null) {
 	country = getCountry(country);
 	country.controller = player;  // Because of the check above, this shouldn't hand control to another player
 	country.numArmies += 1;
+	console.log("Player " + player + " placed an army on " + country.name);
 	drawArmiesForCountry(country);
 	
 	// Handle someCountriesAreUnclaimed logic. We count up numCountriesWithArmies until the world is full.
@@ -502,6 +506,7 @@ function decrementArmiesToPlace(player=currentPlayer) {
  */
 function startAttackOrNoncombatPhase(attacking=true, player=currentPlayer) {
 	turnPhase = attacking ? "attack" : "non-combat";
+	console.info("::Starting the " + turnPhase + " phase::");
 	
 	if(isPlayerNPC()) {
 		handleAiMoves(attacking, player);
@@ -646,7 +651,6 @@ async function makeMove(attacking, theMove=null, player=currentPlayer) {
 			if(attackingCountry.numArmies > 2)
 				attackingCountry.numArmies --;
 			defendingCountry.numArmies --;
-			console.log(attackingCountry.name + " -> " + defendingCountry.name);
 			
 			if(defendingCountry.numArmies <= 0) {
 				invadeCountry(attackingCountry, defendingCountry);
@@ -655,6 +659,8 @@ async function makeMove(attacking, theMove=null, player=currentPlayer) {
 		else { // non-combat: just move over about half the armies
 			invadeCountry(attackingCountry, defendingCountry);
 		}
+		const moveStr = "Player " + player + (attacking ? " Attack: " : " Non-combat: ");
+		console.log(moveStr + attackingCountry.name + " -> " + defendingCountry.name);
 		drawArmiesForCountry(attackingCountry);
 		drawArmiesForCountry(defendingCountry);
 		updateStatusText();
@@ -714,6 +720,15 @@ function nextTurn() {
 	}
 	turnPhase = "reinforcement";
 	armiesLeftToPlace = getNumReinforcementArmies();
+}
+
+/**
+ * Log new turn info to the console. Eventually, this will give turn info to the user.
+ */
+function logNewTurn() {
+	console.log("====================================");
+	console.info("Player " + currentPlayer + " is starting round " + roundCounter + ", turn " + turnCounter);
+	console.log("====================================");
 }
 
 /**
@@ -831,7 +846,7 @@ function loadSong(songStr="mainMenu1") {
 function saveSettings() {
 	if($("#settings-form").data("changed")) {
 		if(confirm("Would you like to start a new game?")) {
-			setUpGameBoard();
+			startGame();
 		}
 		$("#settings-form").data("changed", false);
 	}
