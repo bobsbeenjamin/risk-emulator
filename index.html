@@ -16,6 +16,7 @@
   <style>
     /* Make sure that hidden elements don't show, even in modals */
     [hidden] { display: none !important; }
+    p[id^="dice-roller-die-"] { text-align: center; }
     iframe{ overflow:hidden; } /* Intended to remove the scrollbar when the t-rex-runner game is run using params, but doesn't work as intended */
   </style>
 </head>
@@ -78,16 +79,44 @@
           <h4 id="dice-roller-title" class="modal-title"></h4>
         </div>
         <div id="dice-roller-body" class="modal-body">
-		  <img id="dice-roller-die-1"></img>
-		  <img id="dice-roller-die-2"></img>
-		  <img id="dice-roller-die-3"></img>
-		  <img id="dice-roller-die-4"></img>
-		  <img id="dice-roller-die-5"></img>
-		  <img id="dice-roller-die-6"></img>
-		  <br/>
-		  <span id="dice-roller-results"></span>
-		  <br/>
-		  <span id="dice-roller-player-info"></span>
+          <table>
+            <tr>
+              <td id="dice-roller-die-1-column">
+                <p id="dice-roller-die-1-header"></p>
+                <img id="dice-roller-die-1-image"></img>
+                <p id="dice-roller-die-1-footer"></p>
+              </td>
+              <td id="dice-roller-die-2-column">
+                <p id="dice-roller-die-2-header"></p>
+                <img id="dice-roller-die-2-image"></img>
+                <p id="dice-roller-die-2-footer"></p>
+              </td>
+              <td id="dice-roller-die-3-column">
+                <p id="dice-roller-die-3-header"></p>
+                <img id="dice-roller-die-3-image"></img>
+                <p id="dice-roller-die-3-footer"></p>
+              </td>
+              <td id="dice-roller-die-4-column">
+                <p id="dice-roller-die-4-header"></p>
+                <img id="dice-roller-die-4-image"></img>
+                <p id="dice-roller-die-4-footer"></p>
+              </td>
+              <td id="dice-roller-die-5-column">
+                <p id="dice-roller-die-5-header"></p>
+                <img id="dice-roller-die-5-image"></img>
+                <p id="dice-roller-die-5-footer"></p>
+              </td>
+              <td id="dice-roller-die-6-column">
+                <p id="dice-roller-die-6-header"></p>
+                <img id="dice-roller-die-6-image"></img>
+                <p id="dice-roller-die-6-footer"></p>
+              </td>
+            </tr>
+          </table>
+          <br/>
+          <span id="dice-roller-results"></span>
+          <br/>
+          <span id="dice-roller-player-info"></span>
         </div>
         <div class="modal-footer">
           <button id="dice-roller-roll-again" type="button" onclick="rollAgain();" class="btn btn-default"

@@ -15,7 +15,6 @@ TODO:
 				Show which country is attacking which
 				Show remaining armies on each country
 				Calculate how many dice to use for the attacker and defender
-				Use red dice for the attacker and white dice for the defender
 				Allow rerolls
 			When a player is eliminated, give their cards to the victor
 			Detect the final battle
@@ -51,6 +50,9 @@ TODO:
 			AI speed (ie, pause time between moves)
 			AI difficulty
 	UI:
+		Dice roller:
+			Support using dice for attacks
+			Use red dice for the attacker and white dice for the defender
 		Mobile:
 			Don't register double-clicks, because that zooms instead of attacking
 			Adjust the map size so that the entire map can be seen along with status text
@@ -123,6 +125,9 @@ DONE:
 	Sounds:
 		Music:
 			Add main screen music
+	UI:
+		Dice roller:
+			Reorganize dice elements to support text above and/or below each die
 	Misc/Organization:
 		When clicking off a modal to close it, behave as though a close button was pressed
 		Add t-rex-runner mini-game easter egg

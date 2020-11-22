@@ -149,12 +149,12 @@ function initializeDiceRoller() {
 	diceRoller["title"] = document.getElementById("dice-roller-title");
 	diceRoller["body"] = document.getElementById("dice-roller-body");
 	diceRoller["results"] = document.getElementById("dice-roller-results");
-	diceRoller["die-1"] = document.getElementById("dice-roller-die-1");
-	diceRoller["die-2"] = document.getElementById("dice-roller-die-2");
-	diceRoller["die-3"] = document.getElementById("dice-roller-die-3");
-	diceRoller["die-4"] = document.getElementById("dice-roller-die-4");
-	diceRoller["die-5"] = document.getElementById("dice-roller-die-5");
-	diceRoller["die-6"] = document.getElementById("dice-roller-die-6");
+	for(let i=1; i<=6; i++) {
+		diceRoller["die-" + i + "-column"] = document.getElementById("dice-roller-die-" + i + "-column");
+		diceRoller["die-" + i + "-header"] = document.getElementById("dice-roller-die-" + i + "-header");
+		diceRoller["die-" + i + "-image"] = document.getElementById("dice-roller-die-" + i + "-image");
+		diceRoller["die-" + i + "-footer"] = document.getElementById("dice-roller-die-" + i + "-footer");
+	}
 	diceRoller["player-info"] = document.getElementById("dice-roller-player-info");
 	diceRoller["roll-again"] = document.getElementById("dice-roller-roll-again");
 }
@@ -1119,21 +1119,37 @@ function getDieRoll() {
  */
 function paintDiceRolls(diceArray) {
 	for(let i=0; i<diceArray.length; i++) {
-		let dieElementName = "die-" + (i + 1);
-		paintDieRoll(dieElementName, diceArray[i]);
+		paintDieRoll(i, diceArray[i]);
 	}
 }
 
 /**
  * Display a singe die roll.
  */
-function paintDieRoll(dieElement, number) {
+function paintDieRoll(index, number) {
+	[column, header, image, footer] = getDieElements(index);
+	// Image
 	dieImage = document.createElement("img");
 	dieImage.src = "images/die-white-" + number + ".png";
-	dieImage.width = dieImage.height = 50;
+	dieImage.width = dieImage.height = 70;
 	dieImage.alt = number;
-	diceRoller["body"].replaceChild(dieImage, diceRoller[dieElement]);
-	diceRoller[dieElement] = dieImage;
+	diceRoller[column].replaceChild(dieImage, diceRoller[image]);
+	diceRoller[image] = dieImage;
+	// Text
+	if(diceRollerCaller == "game-start") {
+		diceRoller[header].innerText = "Player" + (index + 1);
+	}
+}
+
+/**
+ * @returns An array with strings for the 4 elements for a die: column, header, image, and footer.
+ */
+function getDieElements(index) {
+	const column = "die-" + (index + 1) + "-column";
+	const header = "die-" + (index + 1) + "-header";
+	const image = "die-" + (index + 1) + "-image";
+	const footer = "die-" + (index + 1) + "-footer";
+	return [column, header, image, footer];
 }
 
 /**
