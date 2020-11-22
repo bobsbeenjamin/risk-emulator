@@ -31,6 +31,8 @@ var currentPlayer = 0; // The player whose turn it is
 var countryList = []; // Only used when in country location capture mode
 var drawSpace = null; // Holds the HTML canvas context
 var diceRoller = {}; // Object with data and UI elements for the dice roller modal
+var diceRollerCaller = null; // The function that called the dice roller, used by continueGame()
+var diceRollerResult = null; // The results from the dice roll
 var htmlCanvasElement = null; // Holds the HTML canvas element (useful for sizing)
 var someCountriesAreUnclaimed = true; // Are we still filling the board?
 var isMuted = false; // Is the background music muted?
@@ -239,15 +241,12 @@ function startGame() {
 	initializeCountries();
 	initializePlayerColors();
 	// Decide who goes first
+	diceRollerCaller = "game-start";
 	const firstPlayer = rollDice("Roll to decide who goes first", "goes first", true, numPlayers);
 	setPlayerOrder(firstPlayer);
 	// Place armies
 	console.log("::Starting a new game::");
 	gameState = ENUM_STATE_READY;
-	transitionGameState(true);
-	// Launch first turn
-	// gameState = ENUM_STATE_PLAYING;
-	// mainGameLoop();
 }
 
 /**
@@ -904,13 +903,26 @@ function openModal(whichModal=null, modalElement=null) {
 }
 
 /**
- * Switch to background music. Possibly call other functions, depending on whichModal.
+ * Switch music. Possibly call other functions, depending on whichModal.
+ * @param whichModal: If "settings", then save the settings. If "diceRoller", then continue the game.
  */
 function closeModal(whichModal=null) {
 	song.pause();
 	loadSong("backgroundMusic1");
 	if(whichModal == "settings") {
 		saveSettings();
+	}
+	else if(whichModal == "diceRoller") {
+		continueGame();
+	}
+}
+
+/**
+ * Pick up the game where it left off, likely right before rolling the dice.
+ */
+function continueGame() {
+	if(diceRollerCaller == "game-start") {
+		transitionGameState(actOnTransition=true);
 	}
 }
 

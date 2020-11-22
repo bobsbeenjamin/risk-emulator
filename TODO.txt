@@ -97,6 +97,7 @@ DONE:
 		When attacking, sometimes the AI leaves its own countries with 0 armies
 		Get AI to take a turn after me (currently nothing happens)
 		The first army is placed for me when I go first and I am using manual placement
+		The dice roller doesn't "pause" the game
 	Gameplay:
 		Placing armies:
 			Initial placement:
