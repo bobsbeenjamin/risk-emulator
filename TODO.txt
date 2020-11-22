@@ -85,6 +85,7 @@ TODO:
 		Combine getCountry and getContinent?
 		Move helpers to another file (or maybe organize code into more than 2 files using logical breaks)
 	Bugs:
+		Don't bug out when continuing after a player is eliminated in a multiplayer game
 		The "Waiting for non-combat" status doesn't show on the human player's non-combat phase
 		The reinforcement number alert happens before the countries are redrawn
 		When populating the world, if I go first, the last click places my first reinforcement army
