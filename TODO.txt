@@ -50,28 +50,40 @@ TODO:
 		AI:
 			AI speed (ie, pause time between moves)
 			AI difficulty
-	Skins:
-		Support different maps
-		Ensure that continent logic works for different maps
-		Allow URL routes to skins (either as a param or a /)
-	Sounds:
-		Music:
-			Load intro music at game load
-			Support multiple songs per track, and tie tracks to game state (combat, settings, etc)
-			Loop music tracks
-			Support music themes
-			Scrape and upload different songs
-			Add different types of music to different parts of the game
-		Sound effects:
-			Support effects
-			Dice rolls
-			Victory shout
+	UI:
+		Mobile:
+			Don't register double-clicks, because that zooms instead of attacking
+			Adjust the map size so that the entire map can be seen along with status text
+			Allow the user to go "full-screen"
+				In normal mode: Add a full-screen icon to the bottom-right of the canvas that activates full-screen
+				Move status text onto the canvas
+				Move the buttons onto the canvas
+				Probably shrink the buttons and style the text
+				Don't overshadow the map with the text or buttons
+				Add a normal-screen icon to the bottom-right, similar to YouTube
+		Skins:
+			Support different maps
+			Ensure that continent logic works for different maps
+			Allow URL routes to skins (either as a param or a /)
+		Sounds:
+			Music:
+				Load intro music at game load
+				Support multiple songs per track, and tie tracks to game state (combat, settings, etc)
+				Loop music tracks
+				Support music themes
+				Scrape and upload different songs
+				Add different types of music to different parts of the game
+			Sound effects:
+				Support effects
+				Dice rolls
+				Victory shout
 	Misc/Organization:
 		Rename playerOrder to turnOrder?
 		Refactor playerOrder, playerColors, etc to all be in a players array or object?
 		Combine getCountry and getContinent?
 		Move helpers to another file (or maybe organize code into more than 2 files using logical breaks)
 	Bugs:
+		The "Waiting for non-combat" status doesn't show on the human player's non-combat phase
 		The reinforcement number alert happens before the countries are redrawn
 		When populating the world, if I go first, the last click places my first reinforcement army
 		Make "Would you like to start a new game?" work when changing new game settings
