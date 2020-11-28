@@ -242,7 +242,7 @@ function startGame() {
 	initializePlayerColors();
 	// Decide who goes first
 	diceRollerCaller = "game-start";
-	const firstPlayer = rollDice("Roll to decide who goes first", "goes first", true, numPlayers);
+	const firstPlayer = rollTheDice(false, 1, true, numPlayers);
 	setPlayerOrder(firstPlayer);
 	// Place armies
 	console.log("::Starting a new game::");
@@ -1059,15 +1059,26 @@ function countryClick(pointerPos) {
 
 /**
  * Roll the dice. This updates the UI.
+ * 
+ * @param isAttackRoll: true if this is called while attacking
+ * @param dicePerPlayer: An array with the number of dice per player, where each element is the 
+ *                       number of dice to roll per player
+ * @param breakTies: If true, then "ties" will not be allowed, meaning all players will get a
+ *                   unique roll
+ * @param numPlayers: The number of players to roll dice for
  */
-function rollDice(modalTitle, resultsSuffix, breakTies=false, numPlayers=2) {
-	// Some UI stuff
-	diceRoller.title.innerText = modalTitle;
-	diceRoller.results.innerText = "";
+function rollTheDice(isAttackRoll=false, dicePerPlayer=null, breakTies=false, numPlayers=2) {
 	// Initial roll
 	let diceArray = [];
-	for(let i=0; i< numPlayers; i++) {
-		diceArray.push(getDieRoll());
+	for(let player=0; player < numPlayers; player++) {
+		if(isAttackRoll && dicePerPlayer) {
+			for(let die=0; die < dicePerPlayer[player]; die++) {
+				diceArray.push(getDieRoll());
+			}
+		}
+		else {
+			diceArray.push(getDieRoll());
+		}
 	}
 	// Break ties
 	if(breakTies) {
@@ -1076,19 +1087,98 @@ function rollDice(modalTitle, resultsSuffix, breakTies=false, numPlayers=2) {
 		}
 		while(hasDuplicates(diceArray)) {
 			diceArray = [];
-			for(let i=0; i< numPlayers; i++) {
+			for(let i=0; i < numPlayers; i++) {
 				diceArray.push(getDieRoll());
 			}
 		}
 	}
-	// Determine winner
-	let winner = diceArray.indexOf(Math.max(...diceArray)) + 1; // Add 1 because players are 1-based
-	// More UI stuff, and return winner
-	paintDiceRolls(diceArray);
-	openModal("diceRoller", diceRoller["parent"]);
-	diceRoller.results.innerText = "Player " + winner + " " + resultsSuffix;
-	diceRoller["player-info"].innerText = getPlayerColorsString();
+	// Determine winner(s)
+	let winner = null; // Just setting this to the function scope
+	if(isAttackRoll) {
+		winner = getWinnersForAttackingDiceRoll(diceArray, dicePerPlayer);
+	}
+	else {
+		winner = diceArray.indexOf(Math.max(...diceArray)) + 1; // Add 1 because players are 1-based
+	}
+	// All the UI stuff, and return the winner
+	displayOutcomeOfDiceRolls(diceArray, isAttackRoll, winner, dicePerPlayer)
 	return winner;
+}
+
+/**
+ * Roll a single die. Does not update the UI.
+ * @returns An int between 1 and 6, inclusive.
+ */
+function getDieRoll() {
+    let min = Math.ceil(1);
+    let max = Math.floor(6);
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+/**
+ * @param diceArray: An array holding the outcomes of all the dice rolled. The dice are ordered with
+ *                   the defender's dice before the attacker's, for display reasons.
+ * @returns The winner(s) for the dice rolls. Uses the highest and 2nd highest outcomes, per Risk rules.
+ */
+function getWinnersForAttackingDiceRoll(diceArray, dicePerPlayer) {
+	let attackerHighest = attacker2ndHighest = defenderHighest = defender2ndHighest = 0;
+	let defender = true;
+	for(let i=0; i<diceArray.length; i++) {
+		if(i >= dicePerPlayer[1])
+			defender = false;
+		let die = diceArray[i];
+		if(defender) {
+			if(die > defenderHighest)
+				defenderHighest = die;
+			else if(die > defender2ndHighest)
+				defender2ndHighest = die;
+		}
+		else {
+			if(die > attackerHighest)
+				attackerHighest = die;
+			else if(die > attacker2ndHighest)
+				attacker2ndHighest = die;
+		}
+	}
+	let result = {
+		attacker: 0,
+		defender: 0
+	};
+	if(attackerHighest > defenderHighest)
+		result.attacker ++
+	else
+		result.defender ++;
+	if(attacker2ndHighest && defender2ndHighest) {
+		if(attacker2ndHighest > defender2ndHighest)
+			result.attacker ++
+		else
+			result.defender ++;
+	}
+	return result;
+}
+
+/**
+ * Update the title, results, and possibly player info. Call paintDiceRolls, which does more dice UI.
+ */
+function displayOutcomeOfDiceRolls(diceArray, isAttackRoll, winner, dicePerPlayer) {
+	if(isAttackRoll) {
+		diceRoller.title.innerText = "Attack roll";
+		let resultText = "";
+		if(winner.attacker)
+			resultText += "The attacker won " + winner.attacker + " roll(s)";
+		if(winner.defender) {
+			if(winner.attacker)  resultText += " | ";
+			resultText += "The defender won " + winner.defender + " roll(s)";
+		}
+		diceRoller.results.innerText = resultText;
+	}
+	else {
+		diceRoller.title.innerText = "Roll to decide who goes first";
+		diceRoller.results.innerText = "Player " + winner + " goes first";
+		diceRoller["player-info"].innerText = getPlayerColorsString();
+	}
+	paintDiceRolls(diceArray, isAttackRoll, dicePerPlayer);
+	openModal("diceRoller", diceRoller["parent"]);
 }
 
 /**
@@ -1105,28 +1195,21 @@ function getPlayerColorsString() {
 }
 
 /**
- * Roll a single die.
- * @returns An int between 1 and 6, inclusive.
- */
-function getDieRoll() {
-    let min = Math.ceil(1);
-    let max = Math.floor(6);
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-/**
  * Display all the dice rolled.
  */
-function paintDiceRolls(diceArray) {
+function paintDiceRolls(diceArray, isAttackRoll, dicePerPlayer=null) {
 	for(let i=0; i<diceArray.length; i++) {
-		paintDieRoll(i, diceArray[i]);
+		if(isAttackRoll && i > dicePerPlayer[1])
+			paintDieRoll(i, diceArray[i], isAttackRoll, dicePerPlayer[1], "red");
+		else
+			paintDieRoll(i, diceArray[i], isAttackRoll);
 	}
 }
 
 /**
  * Display a singe die roll.
  */
-function paintDieRoll(index, number, color="white") {
+function paintDieRoll(index, number, isAttackRoll, numDefenseDice=0, color="white") {
 	[column, header, image, footer] = getDieElements(index);
 	// Image
 	dieImage = document.createElement("img");
@@ -1136,7 +1219,13 @@ function paintDieRoll(index, number, color="white") {
 	diceRoller[column].replaceChild(dieImage, diceRoller[image]);
 	diceRoller[image] = dieImage;
 	// Text
-	if(diceRollerCaller == "game-start") {
+	if(isAttackRoll) {
+		const isAttacker = (color == "red");
+		let headerText = isAttacker ? "Attack Die " : "Defense Die "; // Start of header for this die
+		headerText += isAttacker ? index - numDefenseDice + 1 : index + 1; // Die number
+		diceRoller[header].innerText = headerText;
+	}
+	else {
 		diceRoller[header].innerText = "Player" + (index + 1);
 	}
 }
