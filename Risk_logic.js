@@ -867,26 +867,6 @@ function getRandomInt(min, max) {
 }
 
 /**
- * Load a song and play it if not muted.
- */
-function loadSong(songStr="mainMenu1") {
-	song = musicList[songStr];
-	muteHandler();
-}
-
-/**
- * Commit the settings. Warn user of a reload.
- */
-function saveSettings() {
-	if($("#settings-form").data("changed")) {
-		if(confirm("Would you like to start a new game?")) {
-			startGame();
-		}
-		$("#settings-form").data("changed", false);
-	}
-}
-
-/**
  * Switch from background music to an appropriate song based on the modal opened.
  */
 function openModal(whichModal=null, modalElement=null) {
@@ -903,6 +883,14 @@ function openModal(whichModal=null, modalElement=null) {
 }
 
 /**
+ * Load a song and play it if not muted.
+ */
+function loadSong(songStr="mainMenu1") {
+	song = musicList[songStr];
+	muteHandler();
+}
+
+/**
  * Switch music. Possibly call other functions, depending on whichModal.
  * @param whichModal: If "settings", then save the settings. If "diceRoller", then continue the game.
  */
@@ -914,6 +902,18 @@ function closeModal(whichModal=null) {
 	}
 	else if(whichModal == "diceRoller") {
 		continueGame();
+	}
+}
+
+/**
+ * Commit the settings. Warn user of a reload.
+ */
+function saveSettings() {
+	if($("#settings-form").data("changed")) {
+		if(confirm("Would you like to start a new game?")) {
+			startGame();
+		}
+		$("#settings-form").data("changed", false);
 	}
 }
 
