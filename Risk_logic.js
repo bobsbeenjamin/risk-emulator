@@ -1126,11 +1126,11 @@ function paintDiceRolls(diceArray) {
 /**
  * Display a singe die roll.
  */
-function paintDieRoll(index, number) {
+function paintDieRoll(index, number, color="white") {
 	[column, header, image, footer] = getDieElements(index);
 	// Image
 	dieImage = document.createElement("img");
-	dieImage.src = "images/die-white-" + number + ".png";
+	dieImage.src = "images/die-" + color + "-" + number + ".png";
 	dieImage.width = dieImage.height = 70;
 	dieImage.alt = number;
 	diceRoller[column].replaceChild(dieImage, diceRoller[image]);
