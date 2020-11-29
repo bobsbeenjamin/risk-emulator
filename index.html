@@ -109,7 +109,7 @@
           <h4 id="dice-roller-title" class="modal-title"></h4>
         </div>
         <div id="dice-roller-body" class="modal-body">
-          <table>
+          <table id="dice-roller-dice-table">
             <tr>
               <td id="dice-roller-die-1-column">
                 <p id="dice-roller-die-1-header"></p>
@@ -149,10 +149,12 @@
           <span id="dice-roller-player-info"></span>
         </div>
         <div class="modal-footer">
-          <button id="dice-roller-roll-again" type="button" onclick="rollAgain();" class="btn btn-default"
-            hidden="true">Roll again
+          <button id="dice-roller-roll-again" type="button" onclick="handleDiceRoll();" class="btn btn-default" hidden="true">
+            Roll!
           </button>
-          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-default" data-dismiss="modal">
+            Close
+          </button>
         </div>
       </div>
     </div>

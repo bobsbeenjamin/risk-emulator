@@ -23,12 +23,14 @@ const ENUM_PHASE_REINFORCEMENT = 1,
 const PHASE_ORDER = [ENUM_PHASE_REINFORCEMENT, ENUM_PHASE_ATTACK, ENUM_PHASE_NONCOMBAT, ENUM_PHASE_END];
 // Global variables
 var armiesLeftToPlace = []; // Number of armies each player needs to place; used during reinforcement and initial placement
+var attackingCountry = null; // The attacking country; only used during combat or the non-combat move
 var boardDim = 100 + 10; // leave a padding of 5 on each side of the visible board
 var button_EndTurn = null; // The pass-turn button
 var button_NonCombat = null; // The non-combat button
 var chosenCountry1 = null; // Holds the first chosen country for attack and non-combat moves
 var currentPlayer = 0; // The player whose turn it is
 var countryList = []; // Only used when in country location capture mode
+var defendingCountry = null; // The defending country; only used during combat or the non-combat move
 var drawSpace = null; // Holds the HTML canvas context
 var diceRoller = {}; // Object with data and UI elements for the dice roller modal
 var diceRollerCaller = null; // The function that called the dice roller, used by continueGame()
@@ -50,7 +52,7 @@ var song = null; // Holds the current music track
 var textDisplayArea = null; // Holds the text display area, used for showing stats and game state to the user
 var turnCounter = 0; // Which turn we're on; each player gets one turn per round
 var turnPhase = ""; // The current phase for the current turn
-var waitingForUserAction = false; // Used for async hack (change later dude)
+var waitingForUserAction = false; // Flag to see if we're waiting for the user to press a button
 
 /**
  * Initializes the global vars. Does lots of other initial setup. Run this only once per game with
@@ -150,6 +152,7 @@ function initializeDiceRoller() {
 	diceRoller["title"] = document.getElementById("dice-roller-title");
 	diceRoller["body"] = document.getElementById("dice-roller-body");
 	diceRoller["results"] = document.getElementById("dice-roller-results");
+	diceRoller["table"] = document.getElementById("dice-roller-dice-table");
 	for(let i=1; i<=6; i++) {
 		diceRoller["die-" + i + "-column"] = document.getElementById("dice-roller-die-" + i + "-column");
 		diceRoller["die-" + i + "-header"] = document.getElementById("dice-roller-die-" + i + "-header");
@@ -321,7 +324,7 @@ function firstPlacementOfArmies() {
 /**
  * Update the text display area based on game state.
  */
-function updateStatusText(attackingCountry=null, defendingCountry=null) {
+function updateStatusText() {
 	let text = "";
 	if(gameState == ENUM_STATE_PLAYING) {
 		switch(turnPhase) {
@@ -589,8 +592,8 @@ function getNextAiAttack(player) {
 		console.warn("getNextAiAttack got called during a human player's move. Ignoring.");
 		return null;
 	}
-	for(let attackingCountry of thePlayersCountries(player)) {
-		for(let defendingCountry of attackingCountry.neighboringCountries) {
+	for(attackingCountry of thePlayersCountries(player)) {
+		for(defendingCountry of attackingCountry.neighboringCountries) {
 			defendingCountry = getCountry(defendingCountry);
 			if(attackingCountry.numArmies > defendingCountry.numArmies
 					&& isValidMove(attackingCountry, defendingCountry, true))
@@ -679,28 +682,49 @@ function thePlayersCountries(player=currentPlayer, continent=null) {
  * @param attacking: If true, then make an attack. If false, then make a non-combat move.
  * @param theMove: An array representing the next move. Format: an array with 2 countries.
  */
-function makeMove(attacking, theMove=null, player=currentPlayer) {
+function makeMove(attacking, theMove=null) {
 	if(theMove) {
 		[attackingCountry, defendingCountry] = theMove;
 		if(attacking) {
-			// TODO: Replace the following logic with dice rolls
-			if(attackingCountry.numArmies > 2)
-				attackingCountry.numArmies --;
-			defendingCountry.numArmies --;
-			
-			if(defendingCountry.numArmies <= 0) {
-				invadeCountry(attackingCountry, defendingCountry);
+			// Deterministic attack logic
+			if(skipDiceForAttacks) {
+				if(attackingCountry.numArmies > 2)
+					attackingCountry.numArmies --;
+				defendingCountry.numArmies --;
+				
+				if(defendingCountry.numArmies <= 0) {
+					invadeCountry(attackingCountry, defendingCountry);
+				}
+			}
+			// Dice rolling logic
+			else {
+				diceRollerCaller = "waiting-for-attack";
+				waitingForUserAction = true;
+				displayOutcomeOfDiceRolls(null, true, null, null);
 			}
 		}
 		else { // non-combat: just move over about half the armies
 			invadeCountry(attackingCountry, defendingCountry);
 		}
-		const moveStr = "Player " + player + (attacking ? " Attack: " : " Non-combat: ");
-		console.log(moveStr + attackingCountry.name + " -> " + defendingCountry.name);
-		drawArmiesForCountry(attackingCountry);
-		drawArmiesForCountry(defendingCountry);
-		updateStatusText(attackingCountry, defendingCountry);
+		// Update the UI here for non-combat moves and when the attack logic is deterministic.
+		// For dice-rolling attacks, the UI will be updated after the roll.
+		if(!attacking || skipDiceForAttacks) {
+			updateUiAfterMove(attacking);
+		}
 	}
+}
+
+/**
+ * Uses the rules of Risk to determine how many dice each country gets to use for this combat.
+ * @returns A 2-element array, where the first element is the number of dice for the attacker, and
+ * the second element is the number of dice for the defender.
+ */
+function getDicePerPlayer(attackingCountry, defendingCountry) {
+	// Attack dice are one less than the number of armies on the attacking country, up to 3
+	const numAttackDice = Math.min(3, attackingCountry.numArmies - 1);
+	// Defense dice are the number of armies on the defending country, up to 2
+	const numDefenseDice = Math.min(2, defendingCountry.numArmies);
+	return [numAttackDice, numDefenseDice]
 }
 
 /**
@@ -721,6 +745,19 @@ function invadeCountry(attackingCountry, defendingCountry) {
 	defendingCountry.controller = attackingCountry.controller;
 	drawArmiesForCountry(attackingCountry);
 	drawArmiesForCountry(defendingCountry);
+}
+
+/**
+ * Update the UI after an attack or non-combat move. This is called from makeMove() for non-combat
+ * moves and when the attack logic is deterministic. Otherwise this is called by the dice-roller.
+ */
+function updateUiAfterMove(attacking) {
+	checkWhetherToHideRollButton();
+	const moveStr = "Player " + currentPlayer + (attacking ? " Attack: " : " Non-combat: ");
+	console.log(moveStr + attackingCountry.name + " -> " + defendingCountry.name);
+	drawArmiesForCountry(attackingCountry);
+	drawArmiesForCountry(defendingCountry);
+	updateStatusText(attackingCountry, defendingCountry);
 }
 
 /**
@@ -868,7 +905,7 @@ function getRandomInt(min, max) {
 }
 
 /**
- * Switch from background music to an appropriate song based on the modal opened.
+ * Switch from background music to an appropriate song based whichModal. Open the modal.
  */
 function openModal(whichModal=null, modalElement=null) {
 	song?.pause();
@@ -926,6 +963,10 @@ function continueGame() {
 	if(diceRollerCaller == "game-start") {
 		transitionGameState(actOnTransition=true);
 	}
+	else if(diceRollerCaller == "handle-dice-roll") {
+		let attacking = (turnPhase == ENUM_PHASE_ATTACK);
+		startAttackOrNoncombatPhase(attacking);
+	}
 }
 
 /**
@@ -950,6 +991,34 @@ function drawMap(clearMapFirst=false) {
 		drawSpace.fillRect(0, 0, htmlCanvasElement.width, htmlCanvasElement.height);
 	}
 	drawSpace.drawImage(mapImage, 0, 0, htmlCanvasElement.width, htmlCanvasElement.height);
+}
+
+/**
+ * Handle a click of the Roll button on the dice roller modal.
+ */
+function handleDiceRoll() {
+	checkWhetherToHideRollButton();
+	if(diceRollerCaller == "waiting-for-attack") {
+		diceRollerCaller = "handle-dice-roll";
+	}
+	waitingForUserAction = false;
+	let winner = rollTheDice(true);
+	attackingCountry.numArmies -= winner.defender;
+	defendingCountry.numArmies -= winner.attacker;
+	if(defendingCountry.numArmies <= 0) {
+		invadeCountry(attackingCountry, defendingCountry);
+		diceRoller["roll-again"].hidden = true;
+	}
+	updateUiAfterMove(true);
+}
+
+/**
+ * Check whether to hide the Roll button, and then hide the button if needed.
+ */
+function checkWhetherToHideRollButton() {
+	if(!isValidMove(attackingCountry, defendingCountry, true)) {
+		diceRoller["roll-again"].hidden = true;
+	}
 }
 
 /**
@@ -1072,6 +1141,9 @@ function countryClick(pointerPos) {
 function rollTheDice(isAttackRoll=false, dicePerPlayer=null, breakTies=false, numPlayers=2) {
 	// Initial roll
 	let diceArray = [];
+	if(isAttackRoll && !dicePerPlayer) {
+		dicePerPlayer = getDicePerPlayer(attackingCountry, defendingCountry);
+	}
 	for(let player=0; player < numPlayers; player++) {
 		if(isAttackRoll && dicePerPlayer) {
 			for(let die=0; die < dicePerPlayer[player]; die++) {
@@ -1130,14 +1202,18 @@ function getWinnersForAttackingDiceRoll(diceArray, dicePerPlayer) {
 			defender = false;
 		let die = diceArray[i];
 		if(defender) {
-			if(die > defenderHighest)
+			if(die > defenderHighest) {
+				defender2ndHighest = defenderHighest;
 				defenderHighest = die;
+			}
 			else if(die > defender2ndHighest)
 				defender2ndHighest = die;
 		}
 		else {
-			if(die > attackerHighest)
+			if(die > attackerHighest) {
+				attacker2ndHighest = attackerHighest;
 				attackerHighest = die;
+			}
 			else if(die > attacker2ndHighest)
 				attacker2ndHighest = die;
 		}
@@ -1161,23 +1237,32 @@ function getWinnersForAttackingDiceRoll(diceArray, dicePerPlayer) {
 
 /**
  * Update the title, results, and possibly player info. Call paintDiceRolls, which does more dice UI.
+ * If the global waitingForUserAction flag is true, don't display the results or dice yet.
  */
 function displayOutcomeOfDiceRolls(diceArray, isAttackRoll, winner, dicePerPlayer) {
 	if(isAttackRoll) {
 		diceRoller.title.innerText = "Attack roll";
 		let resultText = "";
-		if(winner.attacker)
-			resultText += "The attacker won " + winner.attacker + " roll(s)";
-		if(winner.defender) {
-			if(winner.attacker)  resultText += " | ";
-			resultText += "The defender won " + winner.defender + " roll(s)";
+		if(waitingForUserAction) {
+			resultText = "Click Roll to roll the dice...";
+		}
+		else {
+			if(winner.attacker) {
+				resultText += " The attacker won " + winner.attacker + " roll(s).";
+			}
+			if(winner.defender) {  // This will add onto the attack message if there was one
+				resultText += " The defender won " + winner.defender + " roll(s)."; // hence the leading space
+			}
 		}
 		diceRoller.results.innerText = resultText;
+		diceRoller["player-info"].innerText = "";
+		diceRoller["roll-again"].hidden = false;
 	}
 	else {
 		diceRoller.title.innerText = "Roll to decide who goes first";
 		diceRoller.results.innerText = "Player " + winner + " goes first";
 		diceRoller["player-info"].innerText = getPlayerColorsString();
+		diceRoller["roll-again"].hidden = true;
 	}
 	paintDiceRolls(diceArray, isAttackRoll, dicePerPlayer);
 	openModal("diceRoller", diceRoller["parent"]);
@@ -1197,22 +1282,36 @@ function getPlayerColorsString() {
 }
 
 /**
- * Display all the dice rolled.
+ * Display all the dice rolled. If the global waitingForUserAction flag is true, instead clear all
+ * of the dice elements.
  */
 function paintDiceRolls(diceArray, isAttackRoll, dicePerPlayer=null) {
-	for(let i=0; i<diceArray.length; i++) {
-		if(isAttackRoll && i > dicePerPlayer[1])
-			paintDieRoll(i, diceArray[i], isAttackRoll, dicePerPlayer[1], "red");
-		else
-			paintDieRoll(i, diceArray[i], isAttackRoll);
+	if(waitingForUserAction) {
+		diceRoller.table.style.display = "none";
+	}
+	else {
+		diceRoller.table.style.display = "block";
+		for(let i=0; i<diceArray.length; i++) {
+			if(isAttackRoll && i >= dicePerPlayer[1])
+				paintDieRoll(i, diceArray[i], isAttackRoll, dicePerPlayer[1], "red");
+			else
+				paintDieRoll(i, diceArray[i], isAttackRoll);
+		}
+		for(let i=diceArray.length; i<5; i++) {
+			paintDieRoll(i, 0, null);
+		}
 	}
 }
 
 /**
- * Display a singe die roll.
+ * Display a singe die roll. If number == 0, clear out the UI for this die column instead.
  */
 function paintDieRoll(index, number, isAttackRoll, numDefenseDice=0, color="white") {
 	[column, header, image, footer] = getDieElements(index);
+	if(!number) {
+		diceRoller[column].hidden = true;
+		return;
+	}
 	// Image
 	dieImage = document.createElement("img");
 	dieImage.src = "images/die-" + color + "-" + number + ".png";
@@ -1223,13 +1322,14 @@ function paintDieRoll(index, number, isAttackRoll, numDefenseDice=0, color="whit
 	// Text
 	if(isAttackRoll) {
 		const isAttacker = (color == "red");
-		let headerText = isAttacker ? "Attack Die " : "Defense Die "; // Start of header for this die
+		let headerText = isAttacker ? "Attack " : "Defense "; // Start of header for this die
 		headerText += isAttacker ? index - numDefenseDice + 1 : index + 1; // Die number
 		diceRoller[header].innerText = headerText;
 	}
 	else {
 		diceRoller[header].innerText = "Player" + (index + 1);
 	}
+	diceRoller[column].hidden = false;
 }
 
 /**

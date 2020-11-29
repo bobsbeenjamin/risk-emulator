@@ -14,8 +14,7 @@ TODO:
 			Use dice for battles
 				Show which country is attacking which
 				Show remaining armies on each country
-				Calculate how many dice to use for the attacker and defender
-				Allow rerolls
+				Support dice for AI attacks
 			When a player is eliminated, give their cards to the victor
 			Detect the final battle
 				Play special music
@@ -49,9 +48,6 @@ TODO:
 			AI speed (ie, pause time between moves)
 			AI difficulty
 	UI:
-		Dice roller:
-			Support using dice for attacks
-			Use red dice for the attacker and white dice for the defender
 		Mobile:
 			Don't register double-clicks, because that zooms instead of attacking
 			Adjust the map size so that the entire map can be seen along with status text
@@ -84,6 +80,7 @@ TODO:
 		Combine getCountry and getContinent?
 		Move helpers to another file (or maybe organize code into more than 2 files using logical breaks)
 	Bugs:
+		When AI tries to use the dice roller, the app hangs
 		Don't bug out when continuing after a player is eliminated in a multiplayer game
 		The "Waiting for non-combat" status doesn't show on the human player's non-combat phase
 		The reinforcement number alert happens before the countries are redrawn
@@ -112,6 +109,9 @@ DONE:
 			Add dumb logic for AI to attack
 			After a win, transfer armies from the attacking country to the defending country
 			Allow the human player to attack
+			Use dice for battles
+				Calculate how many dice to use for the attacker and defender
+				Allow rerolls
 		Taking turns:
 			Support the non-combat phase
 			Pass the turn after non-combat
@@ -130,6 +130,8 @@ DONE:
 	UI:
 		Dice roller:
 			Reorganize dice elements to support text above and/or below each die
+			Support using dice for attacks
+			Use red dice for the attacker and white dice for the defender
 	Misc/Organization:
 		When clicking off a modal to close it, behave as though a close button was pressed
 		Add t-rex-runner mini-game easter egg
