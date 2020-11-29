@@ -45,6 +45,7 @@ var playerColors = []; // The colors for each player
 var playerOrder = []; // Determined at game start; the order of play
 var randomArmyPlacement = false; // Place armies randomly at game start?
 var roundCounter = 0; // Which round we're on; a round is complete once each player takes a turn
+var skipDiceForAttacks = false; // When true, use use deterministic logic for each attack
 var song = null; // Holds the current music track
 var textDisplayArea = null; // Holds the text display area, used for showing stats and game state to the user
 var turnCounter = 0; // Which turn we're on; each player gets one turn per round
@@ -62,7 +63,7 @@ function setUpGameBoard(onLoad=false, redrawMap=false) {
 
 	if(onLoad) {
 		// Set up settings responsiveness FIXME
-		$("#new-game-settings").change(function() {
+		$(".new-game-setting").change(function() {
 			$("#settings-form").data("changed", true);
 		});
 
@@ -226,9 +227,9 @@ function resetGlobalsForNewGame() {
  * Start a new game. Decide who goes first, place armies, and prepare for the first turn. Give the
  * user an option to abort if a game is in progress.
  */
-function startGame() {
+function startGame(confirmRestart=true) {
 	// Give the player an option to abort while a game is going
-	if([ENUM_STATE_INITIALPLACEMENT, ENUM_STATE_PLAYING].includes(gameState)) {
+	if([ENUM_STATE_INITIALPLACEMENT, ENUM_STATE_PLAYING].includes(gameState) &&  confirmRestart) {
 		startNewGame = confirm("Do you want to abandon this game and start a new game?");
 		if(!startNewGame)
 			return;
@@ -569,7 +570,7 @@ function handleAiMoves(attacking, player) {
 			nextMove = getNextAiAttack(player);
 		}
 	}
-	// Only mak a non-combat move aboout half the time
+	// Only mak a non-combat move about half the time
 	else if(getDieRoll() > 3) {
 		let nextMove = getAiNonCombatMove(player);
 		if(nextMove)
@@ -906,15 +907,16 @@ function closeModal(whichModal=null) {
 }
 
 /**
- * Commit the settings. Warn user of a reload.
+ * Commit the settings. Possibly warn the user of a reload.
  */
 function saveSettings() {
 	if($("#settings-form").data("changed")) {
-		if(confirm("Would you like to start a new game?")) {
-			startGame();
+		if(confirm("You changed settings that only affect new games. Would you like to start a new game?")) {
+			startGame(confirmRestart=false);
 		}
 		$("#settings-form").data("changed", false);
 	}
+	skipDiceForAttacks = ($("#settings-skip-dice-for-attacks").is(":checked"));
 }
 
 /**

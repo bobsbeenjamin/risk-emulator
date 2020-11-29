@@ -31,7 +31,6 @@ TODO:
 	Settings:
 		Battles:
 			Always use max dice? checkbox
-			Use dice? checkbox (when unchecked, use deterministic logic)
 			Auto-battle checkbox (battle till someone dies)
 		Players:
 			Allow user to name players
@@ -89,7 +88,6 @@ TODO:
 		The "Waiting for non-combat" status doesn't show on the human player's non-combat phase
 		The reinforcement number alert happens before the countries are redrawn
 		When populating the world, if I go first, the last click places my first reinforcement army
-		Make "Would you like to start a new game?" work when changing new game settings
 		Fix formatting on t-rex-runner mini-game when called using param (or remove param support)
 	
 DONE:
@@ -101,6 +99,7 @@ DONE:
 		Get AI to take a turn after me (currently nothing happens)
 		The first army is placed for me when I go first and I am using manual placement
 		The dice roller doesn't "pause" the game
+		Make "Would you like to start a new game?" work when changing new game settings
 	Gameplay:
 		Placing armies:
 			Initial placement:
@@ -121,6 +120,8 @@ DONE:
 		Allow for more than 2 players
 		Support AI players
 	Settings:
+		Battles:
+			Use dice? checkbox (when unchecked, use deterministic logic)
 		Sounds:
 			Move mute to settings
 	Sounds:

@@ -13,11 +13,31 @@
   <script src="country_data.js"></script>
   <script src="continent_data.js"></script>
   <script src="Risk_logic.js"></script>
+  <!-- CSS -->
   <style>
     /* Make sure that hidden elements don't show, even in modals */
     [hidden] { display: none !important; }
+    /* Center the header text on each column in the dice roller */
     p[id^="dice-roller-die-"] { text-align: center; }
-    iframe{ overflow:hidden; } /* Intended to remove the scrollbar when the t-rex-runner game is run using params, but doesn't work as intended */
+    /* Tooltip text. Credit: https://www.w3schools.com/css/css_tooltip.asp */
+    .tooltip-settings + .tooltiptext {
+      visibility: hidden;
+      width: 350px;
+      top: 100%;
+      left: 50%;
+      margin-left: -175px; /* Use half of the width to center the tooltip */
+      background-color: black;
+      color: #fff;
+      text-align: center;
+      padding: 5px 0;
+      border-radius: 6px;
+      position: absolute;
+      z-index: 1;
+    }
+    /* Show the tooltip text when you mouse over the tooltip container */
+    .tooltip-settings:hover + .tooltiptext {
+      visibility: visible;
+    }
   </style>
 </head>
 
@@ -51,16 +71,26 @@
           <form id="settings-form">
             <h4>Generic Settings</h4>
             <label for="settings-muted">Mute: </label>
-            <input type="checkbox" id="settings-muted" name="settings-muted" onclick="muteHandler();">
+            <input type="checkbox" id="settings-muted" class="tooltip-settings" onclick="muteHandler();">
+            <span class="tooltiptext">Click to mute the music.</span>
+            <br/>
+            <label for="settings-skip-dice-for-attacks">Skip dice rolls when attacking: </label>
+            <input type="checkbox" id="settings-skip-dice-for-attacks" class="tooltip-settings">
+            <span class="tooltiptext">
+              Enable this to have all battles play out without rolling the dice.
+              Instead, each attack removes an army from the defender, and also the 
+              attacker if there are more than 2 armies on the attacker.
+            </span>
             <hr/>
             
             <h4>Settings for Starting a New Game</h4>
             <label for="settings-num-players">Number of Players: </label>
-            <input type="number" id="settings-num-players" name="settings-num-players" class="new-game-setting"
-                   min=2 max=6 value=2>
+            <input type="number" id="settings-num-players" class="new-game-setting tooltip-settings" min=2 max=6 value=2>
+            <span class="tooltiptext">The total number of players in the game, including you. All other players are AI.</span>
+            <br>
             <label for="settings-choose-countries-randomly">Choose Countries Randomly: </label>
-            <input type="checkbox" id="settings-choose-countries-randomly" class="new-game-setting"
-                   name="settings-choose-countries-randomly" checked>
+            <input type="checkbox" id="settings-choose-countries-randomly" class="new-game-setting tooltip-settings" checked>
+            <span class="tooltiptext">When unchecked, players will select countries one-at-a-time.</span>
           </form>
         </div>
         <div class="modal-footer">
