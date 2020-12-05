@@ -7,7 +7,6 @@ TODO:
 				Add dumb logic for AI to trade back cards
 				Enforce card trading when 5+ cards are in hand
 		Taking turns:
-			Detect end of game and declare the winner
 			Get the turn taking loop working
 		Battles:
 			Pause between attacks on AI turn
@@ -80,8 +79,8 @@ TODO:
 		Combine getCountry and getContinent?
 		Move helpers to another file (or maybe organize code into more than 2 files using logical breaks)
 	Bugs:
+		The human player can attack and reinforce from anywhere to anywhere as long as the controllers line up
 		When AI tries to use the dice roller, the app hangs
-		Don't bug out when continuing after a player is eliminated in a multiplayer game
 		The "Waiting for non-combat" status doesn't show on the human player's non-combat phase
 		The reinforcement number alert happens before the countries are redrawn
 		When populating the world, if I go first, the last click places my first reinforcement army
@@ -97,6 +96,7 @@ DONE:
 		The first army is placed for me when I go first and I am using manual placement
 		The dice roller doesn't "pause" the game
 		Make "Would you like to start a new game?" work when changing new game settings
+		Don't bug out when continuing after a player is eliminated in a multiplayer game
 	Gameplay:
 		Placing armies:
 			Initial placement:
@@ -116,6 +116,7 @@ DONE:
 			Support the non-combat phase
 			Pass the turn after non-combat
 			Also allow to pass the turn without taking a non-combat action
+			Detect end of game and declare the winner
 	Players:
 		Allow for more than 2 players
 		Support AI players

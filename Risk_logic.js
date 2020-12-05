@@ -711,6 +711,8 @@ function makeMove(attacking, theMove=null) {
 		if(!attacking || skipDiceForAttacks) {
 			updateUiAfterMove(attacking);
 		}
+		// Possibly remove players from the player order loop, and possibly declare a winner
+		removeDeadPlayers();
 	}
 }
 
@@ -1010,6 +1012,7 @@ function handleDiceRoll() {
 		diceRoller["roll-again"].hidden = true;
 	}
 	updateUiAfterMove(true);
+	removeDeadPlayers();
 }
 
 /**
@@ -1018,6 +1021,45 @@ function handleDiceRoll() {
 function checkWhetherToHideRollButton() {
 	if(!isValidMove(attackingCountry, defendingCountry, true)) {
 		diceRoller["roll-again"].hidden = true;
+	}
+}
+
+/**
+ * Possibly remove players from the player order loop, and then possibly declare a winner.
+ */
+function removeDeadPlayers() {
+	for(let i=0; i<playerOrder.length; i++) {
+		let player = playerOrder[i];
+		if(thePlayersCountries(player).length == 0) {
+			alert("Player " + player + " has been eliminated.");
+			playerOrder.splice(i, i+1); // Delete the player from the playerOrder array
+			// No need to remove the player from playerColors, because it uses player number for indices
+		}
+	}
+	checkForGameWinner();
+}
+
+/**
+ * If someone has won, then declare the winner, end the game, and prompt for a restart.
+ */
+function checkForGameWinner() {
+	if(playerOrder.length == 1) {
+		// TODO: Add end of game music
+		const player = playerOrder[0];
+		// TODO: Make a modal or something prettier than this
+		let playAgain = confirm("Player " + player + " wins!\nWould you like to start a new game now?");
+		if(playAgain) {
+			startGame(false);
+		}
+		else {
+			currentPlayer = 0; // This effectively nueters all game actions, leaving the game dead
+		}
+	}
+	else if(playerOrder.indexOf(ACTIVE_PLAYER_NUM) < 0) {
+		let playAgain = confirm("You have lost...\nWould you like to start a new game now?");
+		if(playAgain) {
+			startGame(false);
+		}
 	}
 }
 
