@@ -332,20 +332,24 @@ function updateStatusText() {
 				text = "Player " + currentPlayer + " has " + armiesLeftToPlace + " armies left to place.";
 				break;
 			case ENUM_PHASE_ATTACK:
-				if(attackingCountry && defendingCountry) {
+				if(attackingCountry && defendingCountry && isPlayerNPC()) {
 					text = "Player " + currentPlayer + " attacked: " + attackingCountry.name + " -> "
 						   + defendingCountry.name;
 					break;
 				}
-				text = "Waiting for attack.";
+				else {
+					text = "Waiting for attack.";
+				}
 				break;
 			case ENUM_PHASE_NONCOMBAT:
-				if(attackingCountry && defendingCountry) {
+				if(attackingCountry && defendingCountry && isPlayerNPC()) {
 					text = "Player " + currentPlayer + " made non-combat move: " + attackingCountry.name
 						   +  "-> " + defendingCountry.name;
 					break;
 				}
-				text = "Waiting for non-combat move.";
+				else {
+					text = "Waiting for non-combat move.";
+				}
 				break;
 			case ENUM_PHASE_END:
 				break;

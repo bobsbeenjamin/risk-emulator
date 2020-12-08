@@ -81,7 +81,6 @@ TODO:
 		Join things together in classes?
 		Move helpers to another file (or maybe organize code into more than 2 files using logical breaks)
 	Bugs:
-		When the human player starts their attack phase, the most recent attack shows in the status bar
 		The human player can attack and reinforce from anywhere to anywhere as long as the controllers line up
 		When AI tries to use the dice roller, the app hangs
 		The "Waiting for non-combat" status doesn't show on the human player's non-combat phase
@@ -101,6 +100,7 @@ DONE:
 		Make "Would you like to start a new game?" work when changing new game settings
 		Don't bug out when continuing after a player is eliminated in a multiplayer game
 		When I eliminate player 2 (red) first in a 3-player game, I'm declared the winner
+		When the human player starts their attack phase, the most recent attack shows in the status bar
 	Gameplay:
 		Placing armies:
 			Initial placement:
