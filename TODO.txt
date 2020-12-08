@@ -58,6 +58,7 @@ TODO:
 				Don't overshadow the map with the text or buttons
 				Add a normal-screen icon to the bottom-right, similar to YouTube
 		Skins:
+			Take photos of my own game boards as source map images
 			Support different maps
 			Ensure that continent logic works for different maps
 			Allow URL routes to skins (either as a param or a /)
