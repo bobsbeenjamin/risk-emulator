@@ -1034,6 +1034,8 @@ function removeDeadPlayers() {
 			alert("Player " + player + " has been eliminated.");
 			playerOrder.splice(i, i+1); // Delete the player from the playerOrder array
 			// No need to remove the player from playerColors, because it uses player number for indices
+			removeDeadPlayers(); // Call again on the now shrunken playerOrder array
+			break; // The playerOrder array was altered, so continuing the loop is dangerous
 		}
 	}
 	checkForGameWinner();
