@@ -1039,18 +1039,28 @@ function removeDeadPlayers() {
 			playerOrder.splice(i, i+1); // Delete the player from the playerOrder array
 			// No need to remove the player from playerColors, because it uses player number for indices
 			removeDeadPlayers(); // Call again on the now shrunken playerOrder array
-			break; // The playerOrder array was altered, so continuing the loop is dangerous
+			// The playerOrder array was altered, so continuing the loop is dangerous
+			return; // checkForGameWinner was already called at the bottom of the recursive call
 		}
 	}
 	checkForGameWinner();
 }
 
 /**
- * If someone has won, then declare the winner, end the game, and prompt for a restart.
+ * If a human player has won or lost, then declare the winner, end the game, and prompt for a restart.
  */
 function checkForGameWinner() {
-	if(playerOrder.length == 1) {
-		// TODO: Add end of game music
+	// check for human player loss
+	if(playerOrder.indexOf(ACTIVE_PLAYER_NUM) < 0) {
+		// TODO: Add lose music
+		let playAgain = confirm("You have lost...\nWould you like to start a new game now?");
+		if(playAgain) {
+			startGame(false);
+		}
+	}
+	// Check for human player win
+	else if(playerOrder.length == 1) {
+		// TODO: Add win music
 		const player = playerOrder[0];
 		// TODO: Make a modal or something prettier than this
 		let playAgain = confirm("Player " + player + " wins!\nWould you like to start a new game now?");
@@ -1059,12 +1069,6 @@ function checkForGameWinner() {
 		}
 		else {
 			currentPlayer = 0; // This effectively nueters all game actions, leaving the game dead
-		}
-	}
-	else if(playerOrder.indexOf(ACTIVE_PLAYER_NUM) < 0) {
-		let playAgain = confirm("You have lost...\nWould you like to start a new game now?");
-		if(playAgain) {
-			startGame(false);
 		}
 	}
 }
