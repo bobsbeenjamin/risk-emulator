@@ -75,6 +75,7 @@ TODO:
 				Dice rolls
 				Victory shout
 	Misc/Organization:
+		Instead of using hasDuplicates() when rolling to see who goes first, use thereIsNoWinner()
 		Rename playerOrder to turnOrder?
 		Refactor playerOrder, playerColors, etc to all be in a players array or object?
 		Combine getCountry and getContinent?

@@ -52,7 +52,7 @@ var song = null; // Holds the current music track
 var textDisplayArea = null; // Holds the text display area, used for showing stats and game state to the user
 var turnCounter = 0; // Which turn we're on; each player gets one turn per round
 var turnPhase = ""; // The current phase for the current turn
-var waitingForUserAction = false; // Flag to see if we're waiting for the user to press a button
+var waitingForDiceRoll = false; // Flag to see if we're waiting for the user to press the Roll! button
 
 /**
  * Initializes the global vars. Does lots of other initial setup. Run this only once per game with
@@ -703,7 +703,7 @@ function makeMove(attacking, theMove=null) {
 			// Dice rolling logic
 			else {
 				diceRollerCaller = "waiting-for-attack";
-				waitingForUserAction = true;
+				waitingForDiceRoll = true;
 				displayDiceRoller(null, true, null, null);
 			}
 		}
@@ -1007,7 +1007,7 @@ function handleDiceRoll() {
 	if(diceRollerCaller == "waiting-for-attack") {
 		diceRollerCaller = "handle-dice-roll";
 	}
-	waitingForUserAction = false;
+	waitingForDiceRoll = false;
 	let winner = rollTheDice(true);
 	attackingCountry.numArmies -= winner.defender;
 	defendingCountry.numArmies -= winner.attacker;
@@ -1295,8 +1295,12 @@ function displayDiceRoller(diceArray, isAttackRoll, winner, dicePerPlayer) {
 	if(isAttackRoll) {
 		diceRoller.title.innerText = "Attack roll";
 		let resultText = "";
-		if(waitingForUserAction) {
-			resultText = "Click Roll to roll the dice...";
+		if(waitingForDiceRoll) {
+			if(isPlayerNPC()) {
+				resultText = "Player " + currentPlayer
+			                 + " is attacking you. Click Roll to show the result of this attack.";
+			}
+			else resultText = "Click Roll to roll the dice, or Close to abandon this attack.";
 		}
 		else {
 			if(winner.attacker) {
@@ -1338,7 +1342,7 @@ function getPlayerColorsString() {
  * of the dice elements.
  */
 function paintDiceRolls(diceArray, isAttackRoll, dicePerPlayer=null) {
-	if(waitingForUserAction) {
+	if(waitingForDiceRoll) {
 		diceRoller.table.style.display = "none";
 	}
 	else {
@@ -1349,7 +1353,7 @@ function paintDiceRolls(diceArray, isAttackRoll, dicePerPlayer=null) {
 			else
 				paintDieRoll(i, diceArray[i], isAttackRoll);
 		}
-		for(let i=diceArray.length; i<5; i++) {
+		for(let i=diceArray.length; i<6; i++) {
 			paintDieRoll(i, 0, null);
 		}
 	}
