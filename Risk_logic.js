@@ -704,7 +704,7 @@ function makeMove(attacking, theMove=null) {
 			else {
 				diceRollerCaller = "waiting-for-attack";
 				waitingForUserAction = true;
-				displayOutcomeOfDiceRolls(null, true, null, null);
+				displayDiceRoller(null, true, null, null);
 			}
 		}
 		else { // non-combat: just move over about half the armies
@@ -1223,7 +1223,7 @@ function rollTheDice(isAttackRoll=false, dicePerPlayer=null, breakTies=false, nu
 		winner = diceArray.indexOf(Math.max(...diceArray)) + 1; // Add 1 because players are 1-based
 	}
 	// All the UI stuff, and return the winner
-	displayOutcomeOfDiceRolls(diceArray, isAttackRoll, winner, dicePerPlayer)
+	displayDiceRoller(diceArray, isAttackRoll, winner, dicePerPlayer)
 	return winner;
 }
 
@@ -1287,7 +1287,7 @@ function getWinnersForAttackingDiceRoll(diceArray, dicePerPlayer) {
  * Update the title, results, and possibly player info. Call paintDiceRolls, which does more dice UI.
  * If the global waitingForUserAction flag is true, don't display the results or dice yet.
  */
-function displayOutcomeOfDiceRolls(diceArray, isAttackRoll, winner, dicePerPlayer) {
+function displayDiceRoller(diceArray, isAttackRoll, winner, dicePerPlayer) {
 	if(isAttackRoll) {
 		diceRoller.title.innerText = "Attack roll";
 		let resultText = "";
