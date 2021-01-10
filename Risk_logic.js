@@ -569,9 +569,18 @@ function handleAiMoves(attacking, player) {
 		console.warn("handleAiMoves got called during a player's move. Ignoring.");
 		return;
 	}
-	// Attack exhaustively
+	// Attack
 	if(attacking) {
 		let nextMove = getNextAiAttack(player);
+		// Attack once and wait for user interaction in the dice roller
+		if(!skipDiceForAttacks) {
+			if(!nextMove)  // Need to move on when there are no attacks left for the AI player
+				transitionGameState(actOnTransition=true);
+			else
+				makeMove(attacking, nextMove);
+			return;
+		}
+		// Attack exhaustively
 		while(nextMove) {
 			makeMove(attacking, nextMove);
 			nextMove = getNextAiAttack(player);
@@ -682,7 +691,8 @@ function thePlayersCountries(player=currentPlayer, continent=null) {
 }
 
 /**
- * Make a single attack. If nextAttack is passed, use it. Then roll the dice to attack.
+ * Make a single attack. If theMove is passed, use it. Otherwise do nothing. If skipDiceForAttacks
+ * is true, then make a deterministic attack. Otherwise, use the dice roller.
  * @param attacking: If true, then make an attack. If false, then make a non-combat move.
  * @param theMove: An array representing the next move. Format: an array with 2 countries.
  */
@@ -705,6 +715,7 @@ function makeMove(attacking, theMove=null) {
 				diceRollerCaller = "waiting-for-attack";
 				waitingForDiceRoll = true;
 				displayDiceRoller(null, true, null, null);
+				return;
 			}
 		}
 		else { // non-combat: just move over about half the armies
@@ -1017,6 +1028,11 @@ function handleDiceRoll() {
 	}
 	updateUiAfterMove(true);
 	removeDeadPlayers();
+	
+	// Special handling for AI attacks
+	if(isPlayerNPC()) {
+		handleAiMoves(true, currentPlayer);
+	}
 }
 
 /**

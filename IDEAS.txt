@@ -3,6 +3,16 @@ Way to think of players:
 	Instead of referring to players by number (Player 1, Player 2, etc), refer to them by color (Red, Yellow, etc)
 	When showing players in the dice roller (and maybe other places), change the color of the text of their names to their color
 
+Sweet settings:
+	Allow "superpowers":
+		When toggled on, players could spent armies during their reinforcement phase to buy superpowers
+		Examples:
+			3 armies: Attack anywhere
+			4 armies: Trade in cards at the next highest tier
+			2 armies: Unlimited reinforcement moves
+			1 army: Reinforce anywhere
+	When fixing the attack anywhere bug, add a setting to enable this as a feature
+
 Possible fun futures:
 	"Skins":
 		Each skin would consist of: A map, with unique territories (that I would have to point in countinents), and songs for the various screens
