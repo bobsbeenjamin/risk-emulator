@@ -39,6 +39,7 @@ var htmlCanvasElement = null; // Holds the HTML canvas element (useful for sizin
 var someCountriesAreUnclaimed = true; // Are we still filling the board?
 var isMuted = false; // Is the background music muted?
 var mapImage = null; // The map image that we draw on
+var musicVolume = 0.5; // The volume modifier that should be applied to all songs
 var gameState = ENUM_STATE_SETUP; // Gamestate mode: ENUM_STATE_PLAYING means a game is in progress
 var musicList = {}; // Holds Audio objects to load and play music
 var numCountriesWithArmies = 0; // How many countries have armies on them; only used during setup
@@ -128,7 +129,7 @@ function readSettings() {
 }
 
 /**
- * Load sound tracks into the global musicList object.
+ * Load sound tracks into the global musicList object. Attach volume control handler.
  */
 function initializeAudio() {
 	try {
@@ -142,6 +143,12 @@ function initializeAudio() {
 	catch (e) {
 		// Do nothing
 	}
+	// Attach volume control
+	document.getElementById("settings-volume-control").addEventListener("change", function(event) {
+		let updatedVolumeVal = event.currentTarget.value / 100;
+		song.volume = updatedVolumeVal;
+		musicVolume = updatedVolumeVal;
+	});
 }
 
 /**
@@ -942,7 +949,7 @@ function openModal(whichModal=null, modalElement=null) {
  */
 function loadSong(songStr="mainMenu1") {
 	song = musicList[songStr];
-	muteHandler();
+	volumeHandler();
 }
 
 /**
@@ -1031,6 +1038,8 @@ function handleDiceRoll() {
 	
 	// Special handling for AI attacks
 	if(isPlayerNPC()) {
+		// TODO: When the AI keeps attacking the same human, keep the dice roller up.
+		// Also, maybe special handling for when there are more attacks for the same countries?
 		handleAiMoves(true, currentPlayer);
 	}
 }
@@ -1447,12 +1456,14 @@ function thereAreArmiesLeftToPlace(player=null) {
 }
 
 /**
- * Handle the "Mute" checkbox.
+ * Handle the Mute checkbox and the Volumen slider.
  */
-function muteHandler() {
-	isMuted = ($("#settings-muted").is(":checked"));
+function volumeHandler() {
 	if(!song)
 		return;
+	song.volume = musicVolume;
+
+	isMuted = ($("#settings-muted").is(":checked"));
 	if(isMuted) {
 		song.muted = true;
 	}

@@ -74,6 +74,9 @@
             <input type="checkbox" id="settings-muted" class="tooltip-settings" onclick="muteHandler();">
             <span class="tooltiptext">Click to mute the music.</span>
             <br/>
+            <label for="settings-volume-control">Volume: </label>
+            <input type="range" id="settings-volume-control" class="tooltip-settings">
+            <span class="tooltiptext">Slide to change the music volume.</span>
             <label for="settings-skip-dice-for-attacks">Skip dice rolls when attacking: </label>
             <input type="checkbox" id="settings-skip-dice-for-attacks" class="tooltip-settings">
             <span class="tooltiptext">
@@ -90,7 +93,7 @@
             <br>
             <label for="settings-choose-countries-randomly">Choose Countries Randomly: </label>
             <input type="checkbox" id="settings-choose-countries-randomly" class="new-game-setting tooltip-settings" checked>
-            <span class="tooltiptext">When unchecked, players will select countries one-at-a-time.</span>
+            <span class="tooltiptext">When unchecked, players will select countries one-at-a-time at the start of the game.</span>
           </form>
         </div>
         <div class="modal-footer">
