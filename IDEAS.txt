@@ -1,3 +1,6 @@
+Rebrand:
+	Rather than brand this as a Risk clone, make this my own thing, inspired by Risk
+	Call it "World Conquest"?
 
 Way to think of players:
 	Instead of referring to players by number (Player 1, Player 2, etc), refer to them by color (Red, Yellow, etc)
@@ -11,7 +14,7 @@ Sweet settings:
 			4 armies: Trade in cards at the next highest tier
 			2 armies: Unlimited reinforcement moves
 			1 army: Reinforce anywhere
-	When fixing the attack anywhere bug, add a setting to enable this as a feature
+		When fixing the attack anywhere bug, add a setting to enable this as a feature
 
 Possible fun futures:
 	"Skins":
@@ -19,6 +22,7 @@ Possible fun futures:
 		Skins would be built around themes, such as:
 			Legend of Zelda: Hyrule
 			Lord of the Rings: Middle Earth
+				Intro music: https://www.youtube.com/watch?v=_SBQvd6vY9s&t=2185s
 			Shadowrun: Redrawn Earth
 			Starcraft: Koprulu Sector
 			Star Trek: Federation vs Klingons vs Dominion etc
