@@ -1,6 +1,6 @@
 
 TODO:
-	Rebrand:
+	Rebrand to "World Conquest":
 		Upate tab logo image
 		Rename tab and page header
 		Update code and ancillary files
@@ -80,6 +80,9 @@ TODO:
 				Dice rolls
 				Victory shout
 	Misc/Organization:
+		Remove bootstrap
+			Replace modals with the new <dialog> HTML 5 element
+			Replace the pseudo-hover text in settings with the new popover HTML 5 feature
 		Instead of using hasDuplicates() when rolling to see who goes first, use thereIsNoWinner()
 		Rename playerOrder to turnOrder?
 		Refactor playerOrder, playerColors, etc to all be in a players array or object?
