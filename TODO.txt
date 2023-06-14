@@ -81,8 +81,9 @@ TODO:
 				Victory shout
 	Misc/Organization:
 		Remove bootstrap
-			Replace modals with the new <dialog> HTML 5 element
 			Replace the pseudo-hover text in settings with the new popover HTML 5 feature
+			Make the new elements look nice? (this may be handled by using bootstrap's css)
+			Remove all unneeded bootstrap imports and code
 		Instead of using hasDuplicates() when rolling to see who goes first, use thereIsNoWinner()
 		Rename playerOrder to turnOrder?
 		Refactor playerOrder, playerColors, etc to all be in a players array or object?
@@ -92,10 +93,13 @@ TODO:
 		Pull adaptive UI text from a file, rather than hard-coding (example: "Click Roll to roll the dice, or Close to abandon this attack.")
 		Remove support for t-rex-runner mini-game
 	Bugs:
+		Make the rolls stick in the dice roller (the rolls show, but the armies don't change)
 		The human player can attack and reinforce from anywhere to anywhere as long as the controllers line up
-		When AI tries to use the dice roller, the app hangs
 		The "Waiting for non-combat" status doesn't show on the human player's non-combat phase
 		The reinforcement number alert happens before the countries are redrawn
+		When attacking without rolling, the attacker should always lose armies
+			Currently, the attacker stops losing armies when they get down to 2, which opens an exploit to take out a much larger force by attacking it mercilessly
+			I may need some other logic to make the game playable, since this check was put in for a reason (but I think it's fine to just remove the exception)
 		When populating the world manually, if I go first, the last click places my first reinforcement army
 		Make the mute checkbox trigger immediately (this is a regression)
 	
@@ -112,6 +116,7 @@ DONE:
 		Don't bug out when continuing after a player is eliminated in a multiplayer game
 		When I eliminate player 2 (red) first in a 3-player game, I'm declared the winner
 		When the human player starts their attack phase, the most recent attack shows in the status bar
+		When AI tries to use the dice roller, the app hangs
 	Gameplay:
 		Placing armies:
 			Initial placement:
@@ -152,4 +157,6 @@ DONE:
 		When clicking off a modal to close it, behave as though a close button was pressed
 		Add t-rex-runner mini-game easter egg
 		Turn PHASE_ORDER and gameStateOrder into global enums
+		Remove bootstrap
+			Replace modals with the new <dialog> HTML 5 element
 	

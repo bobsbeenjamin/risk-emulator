@@ -39,6 +39,8 @@ var htmlCanvasElement = null; // Holds the HTML canvas element (useful for sizin
 var someCountriesAreUnclaimed = true; // Are we still filling the board?
 var isMuted = false; // Is the background music muted?
 var mapImage = null; // The map image that we draw on
+var modal_DiceRoller = null; // Reference to the dice-roller popup modal
+var modal_Settings = null; // Reference to the settings popup modal
 var musicVolume = 0.5; // The volume modifier that should be applied to all songs
 var gameState = ENUM_STATE_SETUP; // Gamestate mode: ENUM_STATE_PLAYING means a game is in progress
 var musicList = {}; // Holds Audio objects to load and play music
@@ -65,18 +67,6 @@ function setUpGameBoard(onLoad=false, redrawMap=false) {
 	readSettings();
 
 	if(onLoad) {
-		// Set up settings responsiveness FIXME
-		$(".new-game-setting").change(function() {
-			$("#settings-form").data("changed", true);
-		});
-
-		// Set up modal close functions
-		$("#settingsMenu").on("hidden.bs.modal", function () {
-			closeModal("settings");
-		});
-		$("#diceRoller").on("hidden.bs.modal", function () {
-			closeModal("diceRoller");
-		});
 		
 		// Initialize audio, the dice roller modal, the elements (all UI), and the continents (data)
 		initializeAudio();
@@ -155,7 +145,6 @@ function initializeAudio() {
  * Bind dice roller UI elements to the global diceRoller object.
  */
 function initializeDiceRoller() {
-	diceRoller["parent"] = $("#diceRoller");
 	diceRoller["title"] = document.getElementById("dice-roller-title");
 	diceRoller["body"] = document.getElementById("dice-roller-body");
 	diceRoller["results"] = document.getElementById("dice-roller-results");
@@ -177,6 +166,8 @@ function initializeUiElements() {
 	button_EndTurn = document.getElementById("end-turn");
 	button_NonCombat = document.getElementById("start-non-combat");
 	textDisplayArea = document.getElementById("text-display-area");
+	modal_DiceRoller = document.getElementById("dice-roller");
+	modal_Settings = document.getElementById("settings-menu");
 	initializeCanvas();
 }
 
@@ -931,16 +922,15 @@ function getRandomInt(min, max) {
 /**
  * Switch from background music to an appropriate song based whichModal. Open the modal.
  */
-function openModal(whichModal=null, modalElement=null) {
+function openModal(whichModal=null) {
 	song?.pause();
 	if(whichModal == "settings") {
 		loadSong("mainMenu1");
+		modal_Settings.showModal();
 	}
 	else if(whichModal == "diceRoller") {
 		loadSong("battleMusic1");
-	}
-	if(modalElement) {
-		modalElement.modal("show");
+		modal_DiceRoller.showModal();
 	}
 }
 
@@ -961,8 +951,10 @@ function closeModal(whichModal=null) {
 	loadSong("backgroundMusic1");
 	if(whichModal == "settings") {
 		saveSettings();
+		modal_Settings.close();
 	}
 	else if(whichModal == "diceRoller") {
+		modal_DiceRoller.close();
 		continueGame();
 	}
 }
@@ -1346,7 +1338,7 @@ function displayDiceRoller(diceArray, isAttackRoll, winner, dicePerPlayer) {
 		diceRoller["roll-again"].hidden = true;
 	}
 	paintDiceRolls(diceArray, isAttackRoll, dicePerPlayer);
-	openModal("diceRoller", diceRoller["parent"]);
+	openModal("diceRoller");
 }
 
 /**

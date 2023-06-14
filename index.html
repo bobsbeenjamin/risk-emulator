@@ -51,7 +51,7 @@
   <br/>
   <p id="text-display-area">Click a button below to start</p>
   <button onclick="startGame();">Start Game</button>
-  <button type="button" onclick="openModal('settings');" data-toggle="modal" data-target="#settingsMenu">
+  <button type="button" onclick="openModal('settings');">
     Settings
   </button>
   <button id="start-non-combat" style="display: none;" onclick="startAttackOrNoncombatPhase(attacking=false);">
@@ -60,108 +60,100 @@
   <button id="end-turn" style="display: none;" onclick="nextTurn();">Pass the Turn</button>
   
   <!-- Settings Menu -->
-  <div id="settingsMenu" class="modal fade" role="dialog">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal">&times;</button>
-          <h4 class="modal-title">Settings</h4>
-        </div>
-        <div class="modal-body">
-          <form id="settings-form">
-            <h4>Generic Settings</h4>
-            <label for="settings-muted">Mute: </label>
-            <input type="checkbox" id="settings-muted" class="tooltip-settings" onclick="muteHandler();">
-            <span class="tooltiptext">Click to mute the music.</span>
-            <br/>
-            <label for="settings-volume-control">Volume: </label>
-            <input type="range" id="settings-volume-control" class="tooltip-settings">
-            <span class="tooltiptext">Slide to change the music volume.</span>
-            <label for="settings-skip-dice-for-attacks">Skip dice rolls when attacking: </label>
-            <input type="checkbox" id="settings-skip-dice-for-attacks" class="tooltip-settings">
-            <span class="tooltiptext">
-              Enable this to have all battles play out without rolling the dice.
-              Instead, each attack removes an army from the defender, and also the 
-              attacker if there are more than 2 armies on the attacker.
-            </span>
-            <hr/>
-            
-            <h4>Settings for Starting a New Game</h4>
-            <label for="settings-num-players">Number of Players: </label>
-            <input type="number" id="settings-num-players" class="new-game-setting tooltip-settings" min=2 max=6 value=3>
-            <span class="tooltiptext">The total number of players in the game, including you. All other players are AI.</span>
-            <br>
-            <label for="settings-choose-countries-randomly">Choose Countries Randomly: </label>
-            <input type="checkbox" id="settings-choose-countries-randomly" class="new-game-setting tooltip-settings" checked>
-            <span class="tooltiptext">When unchecked, players will select countries one-at-a-time at the start of the game.</span>
-          </form>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-default" data-dismiss="modal">Save</button>
-        </div>
-      </div>
+  <dialog id="settings-menu" class="modal-dialog">
+    <div class="modal-header">
+      <button type="button" class="close" onclick="closeModal('settings');">&times;</button>
+      <h4 class="modal-title">Settings</h4>
     </div>
-  </div>
+    <div class="modal-body">
+      <form id="settings-form">
+        <h4>Generic Settings</h4>
+        <label for="settings-muted">Mute: </label>
+        <input type="checkbox" id="settings-muted" class="tooltip-settings" onclick="muteHandler();">
+        <span class="tooltiptext">Click to mute the music.</span>
+        <br/>
+        <label for="settings-volume-control">Volume: </label>
+        <input type="range" id="settings-volume-control" class="tooltip-settings">
+        <span class="tooltiptext">Slide to change the music volume.</span>
+        <label for="settings-skip-dice-for-attacks">Skip dice rolls when attacking: </label>
+        <input type="checkbox" id="settings-skip-dice-for-attacks" class="tooltip-settings">
+        <span class="tooltiptext">
+          Enable this to have all battles play out without rolling the dice.
+          Instead, each attack removes an army from the defender, and also the 
+          attacker if there are more than 2 armies on the attacker.
+        </span>
+        <hr/>
+        
+        <h4>Settings for Starting a New Game</h4>
+        <label for="settings-num-players">Number of Players: </label>
+        <input type="number" id="settings-num-players" class="new-game-setting tooltip-settings" min=2 max=6 value=3>
+        <span class="tooltiptext">The total number of players in the game, including you. All other players are AI.</span>
+        <br>
+        <label for="settings-choose-countries-randomly">Choose Countries Randomly: </label>
+        <input type="checkbox" id="settings-choose-countries-randomly" class="new-game-setting tooltip-settings" checked>
+        <span class="tooltiptext">When unchecked, players will select countries one-at-a-time at the start of the game.</span>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-default" onclick="closeModal('settings');">Save</button>
+    </div>
+  </dialog>
   
   <!-- Dice roller -->
-  <div id="diceRoller" class="modal fade" role="dialog">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal">&times;</button>
-          <h4 id="dice-roller-title" class="modal-title"></h4>
-        </div>
-        <div id="dice-roller-body" class="modal-body">
-          <table id="dice-roller-dice-table">
-            <tr>
-              <td id="dice-roller-die-1-column">
-                <p id="dice-roller-die-1-header"></p>
-                <img id="dice-roller-die-1-image"></img>
-                <p id="dice-roller-die-1-footer"></p>
-              </td>
-              <td id="dice-roller-die-2-column">
-                <p id="dice-roller-die-2-header"></p>
-                <img id="dice-roller-die-2-image"></img>
-                <p id="dice-roller-die-2-footer"></p>
-              </td>
-              <td id="dice-roller-die-3-column">
-                <p id="dice-roller-die-3-header"></p>
-                <img id="dice-roller-die-3-image"></img>
-                <p id="dice-roller-die-3-footer"></p>
-              </td>
-              <td id="dice-roller-die-4-column">
-                <p id="dice-roller-die-4-header"></p>
-                <img id="dice-roller-die-4-image"></img>
-                <p id="dice-roller-die-4-footer"></p>
-              </td>
-              <td id="dice-roller-die-5-column">
-                <p id="dice-roller-die-5-header"></p>
-                <img id="dice-roller-die-5-image"></img>
-                <p id="dice-roller-die-5-footer"></p>
-              </td>
-              <td id="dice-roller-die-6-column">
-                <p id="dice-roller-die-6-header"></p>
-                <img id="dice-roller-die-6-image"></img>
-                <p id="dice-roller-die-6-footer"></p>
-              </td>
-            </tr>
-          </table>
-          <br/>
-          <span id="dice-roller-results"></span>
-          <br/>
-          <span id="dice-roller-player-info"></span>
-        </div>
-        <div class="modal-footer">
-          <button id="dice-roller-roll-again" type="button" onclick="handleDiceRoll();" class="btn btn-default" hidden="true">
-            Roll!
-          </button>
-          <button type="button" class="btn btn-default" data-dismiss="modal">
-            Close
-          </button>
-        </div>
-      </div>
+  <dialog id="dice-roller" class="modal-dialog">
+    <div class="modal-header">
+      <button type="button" class="close" onclick="closeModal('diceRoller');">&times;</button>
+      <h4 id="dice-roller-title" class="modal-title"></h4>
     </div>
-  </div>
+    <div id="dice-roller-body" class="modal-body">
+      <table id="dice-roller-dice-table">
+        <tr>
+          <td id="dice-roller-die-1-column">
+            <p id="dice-roller-die-1-header"></p>
+            <img id="dice-roller-die-1-image"></img>
+            <p id="dice-roller-die-1-footer"></p>
+          </td>
+          <td id="dice-roller-die-2-column">
+            <p id="dice-roller-die-2-header"></p>
+            <img id="dice-roller-die-2-image"></img>
+            <p id="dice-roller-die-2-footer"></p>
+          </td>
+          <td id="dice-roller-die-3-column">
+            <p id="dice-roller-die-3-header"></p>
+            <img id="dice-roller-die-3-image"></img>
+            <p id="dice-roller-die-3-footer"></p>
+          </td>
+          <td id="dice-roller-die-4-column">
+            <p id="dice-roller-die-4-header"></p>
+            <img id="dice-roller-die-4-image"></img>
+            <p id="dice-roller-die-4-footer"></p>
+          </td>
+          <td id="dice-roller-die-5-column">
+            <p id="dice-roller-die-5-header"></p>
+            <img id="dice-roller-die-5-image"></img>
+            <p id="dice-roller-die-5-footer"></p>
+          </td>
+          <td id="dice-roller-die-6-column">
+            <p id="dice-roller-die-6-header"></p>
+            <img id="dice-roller-die-6-image"></img>
+            <p id="dice-roller-die-6-footer"></p>
+          </td>
+        </tr>
+      </table>
+      <br/>
+      <span id="dice-roller-results"></span>
+      <br/>
+      <span id="dice-roller-player-info"></span>
+    </div>
+    <div class="modal-footer">
+      <button id="dice-roller-roll-again" type="button" onclick="handleDiceRoll();" class="btn btn-default" hidden="true">
+        Roll!
+      </button>
+      <button type="button" class="btn btn-default" onclick="closeModal('diceRoller');">
+        Close
+      </button>
+    </div>
+  </dialog>
   
 </body>
 </html>
