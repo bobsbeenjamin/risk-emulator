@@ -167,6 +167,12 @@ function initializeUiElements() {
 	button_NonCombat = document.getElementById("start-non-combat");
 	textDisplayArea = document.getElementById("text-display-area");
 	modal_DiceRoller = document.getElementById("dice-roller");
+	modal_DiceRoller.addEventListener("cancel", function(event) {
+		event.preventDefault();
+		setTimeout(function() {
+			closeModal("diceRoller");
+		}, 0);
+	});
 	modal_Settings = document.getElementById("settings-menu");
 	initializeCanvas();
 }
@@ -930,7 +936,8 @@ function openModal(whichModal=null) {
 	}
 	else if(whichModal == "diceRoller") {
 		loadSong("battleMusic1");
-		modal_DiceRoller.showModal();
+		if(!modal_DiceRoller.open)
+			modal_DiceRoller.showModal();
 	}
 }
 
@@ -947,6 +954,10 @@ function loadSong(songStr="mainMenu1") {
  * @param whichModal: If "settings", then save the settings. If "diceRoller", then continue the game.
  */
 function closeModal(whichModal=null) {
+	if(whichModal == "diceRoller" && waitingForDiceRoll && isPlayerNPC()) {
+		handleDiceRoll();
+		return;
+	}
 	song.pause();
 	loadSong("backgroundMusic1");
 	if(whichModal == "settings") {
@@ -979,9 +990,14 @@ function continueGame() {
 	if(diceRollerCaller == "game-start") {
 		transitionGameState(actOnTransition=true);
 	}
-	else if(diceRollerCaller == "handle-dice-roll") {
-		let attacking = (turnPhase == ENUM_PHASE_ATTACK);
-		startAttackOrNoncombatPhase(attacking);
+	else if(diceRollerCaller == "handle-dice-roll"
+			|| (!waitingForDiceRoll && isPlayerNPC() && turnPhase == ENUM_PHASE_ATTACK)) {
+		diceRollerCaller = null;
+		const isAttacking = (turnPhase == ENUM_PHASE_ATTACK);
+		if(isAttacking && isPlayerNPC())
+			handleAiMoves(true, currentPlayer);
+		else
+			startAttackOrNoncombatPhase(isAttacking);
 	}
 }
 
@@ -1028,12 +1044,7 @@ function handleDiceRoll() {
 	updateUiAfterMove(true);
 	removeDeadPlayers();
 	
-	// Special handling for AI attacks
-	if(isPlayerNPC()) {
-		// TODO: When the AI keeps attacking the same human, keep the dice roller up.
-		// Also, maybe special handling for when there are more attacks for the same countries?
-		handleAiMoves(true, currentPlayer);
-	}
+	// If this is an NPC attack, continueGame() resumes the NPC after the user closes the result.
 }
 
 /**
