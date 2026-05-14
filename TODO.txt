@@ -82,8 +82,8 @@ TODO:
 	Misc/Organization:
 		Remove bootstrap
 			Replace the pseudo-hover text in settings with the new popover HTML 5 feature
-			Make the new elements look nice? (this may be handled by using bootstrap's css)
-			Remove all unneeded bootstrap imports and code
+			Remove bootstrap imports
+				Make the new elements look nice (the header and footer look nice, but the modals look bad when I remove bootstrap imports)
 		Instead of using hasDuplicates() when rolling to see who goes first, use thereIsNoWinner()
 		Rename playerOrder to turnOrder?
 		Refactor playerOrder, playerColors, etc to all be in a players array or object?
@@ -91,7 +91,6 @@ TODO:
 		Join things together in classes?
 		Move helpers to another file (or maybe organize code into more than 2 files using logical breaks)
 		Pull adaptive UI text from a file, rather than hard-coding (example: "Click Roll to roll the dice, or Close to abandon this attack.")
-		Remove support for t-rex-runner mini-game
 	Bugs:
 		The human player can attack and reinforce from anywhere to anywhere as long as the controllers line up (cool superpower for the future, though)
 		The "Waiting for non-combat" status doesn't show on the human player's non-combat phase
@@ -159,4 +158,5 @@ DONE:
 		Turn PHASE_ORDER and gameStateOrder into global enums
 		Remove bootstrap
 			Replace modals with the new <dialog> HTML 5 element
+		Remove support for t-rex-runner mini-game
 	
