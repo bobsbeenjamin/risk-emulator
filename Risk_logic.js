@@ -113,9 +113,9 @@ function parseUrlParams() {
  * Read user selections from the settings modal.
  */
 function readSettings() {
-	isMuted = ($("#settings-muted").is(":checked"));
+	isMuted = document.getElementById("settings-muted").checked;
 	numPlayers = parseInt(document.getElementById("settings-num-players").value);
-	randomArmyPlacement = ($("#settings-choose-countries-randomly").is(":checked"));
+	randomArmyPlacement = document.getElementById("settings-choose-countries-randomly").checked;
 }
 
 /**
@@ -974,13 +974,14 @@ function closeModal(whichModal=null) {
  * Commit the settings. Possibly warn the user of a reload.
  */
 function saveSettings() {
-	if($("#settings-form").data("changed")) {
+	const settingsForm = document.getElementById("settings-form");
+	if(settingsForm.dataset.changed) {
 		if(confirm("You changed settings that only affect new games. Would you like to start a new game?")) {
 			startGame(confirmRestart=false);
 		}
-		$("#settings-form").data("changed", false);
+		delete settingsForm.dataset.changed;
 	}
-	skipDiceForAttacks = ($("#settings-skip-dice-for-attacks").is(":checked"));
+	skipDiceForAttacks = document.getElementById("settings-skip-dice-for-attacks").checked;
 }
 
 /**
@@ -1466,7 +1467,7 @@ function volumeHandler() {
 		return;
 	song.volume = musicVolume;
 
-	isMuted = ($("#settings-muted").is(":checked"));
+	isMuted = document.getElementById("settings-muted").checked;
 	if(isMuted) {
 		song.muted = true;
 	}
